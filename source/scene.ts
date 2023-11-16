@@ -1,10 +1,15 @@
 import GUI from 'lil-gui'
 import {
   AmbientLight,
+  AnimationClip,
+  AnimationMixer,
   AxesHelper,
+  Box3,
   BoxGeometry,
   Clock,
+  EquirectangularReflectionMapping,
   GridHelper,
+  Group,
   LoadingManager,
   Mesh,
   MeshLambertMaterial,
@@ -23,6 +28,9 @@ import Stats from 'three/examples/jsm/libs/stats.module'
 import * as animations from './helpers/animations'
 import { toggleFullScreen } from './helpers/fullscreen'
 import { resizeRendererToDisplaySize } from './helpers/responsiveness'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+
 import './style.css'
 
 const CANVAS_ID = 'scene'
@@ -34,6 +42,9 @@ let loadingManager: LoadingManager
 let ambientLight: AmbientLight
 let pointLight: PointLight
 let cube: Mesh
+let trike: Group
+let trike_animations: AnimationClip[]
+let mixer: AnimationMixer
 let camera: PerspectiveCamera
 let cameraControls: OrbitControls
 let dragControls: DragControls
@@ -43,10 +54,12 @@ let clock: Clock
 let stats: Stats
 let gui: GUI
 
+let lastFrame: number
+
 const animation = { enabled: false, play: true }
 
 init()
-animate()
+animate(0)
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -93,7 +106,7 @@ function init() {
     scene.add(pointLight)
   }
 
-  // ===== 📦 OBJECTS =====
+  // ===== 📦 CUBE AND PLANE =====
   {
     const sideLength = 1
     const cubeGeometry = new BoxGeometry(sideLength, sideLength, sideLength)
@@ -119,7 +132,7 @@ function init() {
     plane.rotateX(Math.PI / 2)
     plane.receiveShadow = true
 
-    scene.add(cube)
+    //scene.add(cube)
     scene.add(plane)
   }
 
@@ -127,6 +140,48 @@ function init() {
   {
     camera = new PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100)
     camera.position.set(2, 2, 5)
+  }
+
+  // ===== 🌎 ENVIRONMENT MAP =====
+  {
+    const loader = new RGBELoader()
+    loader.load( 
+        'dresden_station_night_4k.hdr',
+        function ( texture ) {
+          texture.mapping = EquirectangularReflectionMapping;
+          scene.background = texture;
+          
+          renderer.render( scene, camera );
+        });
+  }
+
+  // ===== 🦕 TRICERATOPS HORRIDUS =====
+  {
+    const loader = new GLTFLoader();
+    loader.load( 
+        '/animated_triceratops_skeleton.glb', 
+        function ( gltf ) {
+          trike = gltf.scene;
+          scene.add( trike );
+
+          const animations = gltf.animations;
+          const anis = trike.animations
+          console.log(animations, anis);
+
+          mixer = new AnimationMixer( trike );
+
+          trike_animations = gltf.animations;
+
+          const box = new Box3().setFromObject(trike);
+          console.log(box.min.y, trike.position.y);
+          trike.position.y = 0.8;
+
+          mixer.clipAction(trike_animations[4]).play();
+        }, 
+        undefined, 
+        function ( error ) {
+          console.error( error );
+        });
   }
 
   // ===== 🕹️ CONTROLS =====
@@ -246,10 +301,16 @@ function init() {
   }
 }
 
-function animate() {
+function animate(timeStamp: number) {
   requestAnimationFrame(animate)
+  
+  if (lastFrame === undefined)
+    lastFrame = timeStamp;
+  const deltaTime = timeStamp - lastFrame;
+  lastFrame = timeStamp;
 
   stats.update()
+  mixer.update( deltaTime/1000 )
 
   if (animation.enabled && animation.play) {
     animations.rotate(cube, clock, Math.PI / 3)
