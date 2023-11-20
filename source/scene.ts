@@ -42,7 +42,7 @@ let ambientLight: AmbientLight;
 let pointLight: PointLight;
 let cube: Mesh;
 let trike: Group;
-let trike_animations: AnimationClip[];
+let trikeAnimations: AnimationClip[];
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: OrbitControls;
@@ -57,7 +57,7 @@ let lastFrame: number;
 
 const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
-let trikeAnimation: { animation: string, play: boolean; };
+let trikeAnimationSettings: { animation: string, play: boolean; };
 
 init();
 animate( 0 );
@@ -201,15 +201,15 @@ addGui();
 
       mixer = new AnimationMixer( trike );
 
-      trike_animations = gltf.animations;
-      console.log( trike_animations );
+      trikeAnimations = gltf.animations;
+      console.log( trikeAnimations );
 
-      trike_animations.forEach( ( animation, i ) => {
+      trikeAnimations.forEach( ( animation, i ) => {
         console.log( animation.name );
         trikeAnimationNames[ i ] = animation.name;
       } );
 
-      trikeAnimation = { animation: trikeAnimationNames[ 4 ], play: false };
+      trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: false };
 
       trike.position.y = 0.8;
 
@@ -260,7 +260,7 @@ function addControls() {
 }
 
 function addGui() {
-  const trikeFolder = gui.addFolder( 'Triceratops' );
+  gui.addFolder( 'Triceratops' );
   /*
     const cubeOneFolder = gui.addFolder('Cube one')
 
@@ -320,27 +320,18 @@ function addTrikeGui() {
   trikeFolder.add( trike.position, 'y' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos y' );
   trikeFolder.add( trike.position, 'z' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos z' );
 
-  //trikeFolder.add(cube.material, 'wireframe')
-  //trikeFolder.addColor(cube.material, 'color')
-  //trikeFolder.add(cube.material, 'metalness', 0, 1, 0.1)
-  //trikeFolder.add(cube.material, 'roughness', 0, 1, 0.1)
-
   trikeFolder.add( trike.rotation, 'x', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate x' );
   trikeFolder.add( trike.rotation, 'y', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate y' );
   trikeFolder.add( trike.rotation, 'z', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate z' );
 
-  trikeFolder.add( trikeAnimation, 'play' ).name( 'animated' ).onChange( () => ( toggleTrikeAnimation() ) );
-  trikeFolder.add( trikeAnimation, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => ( changeTrikeAnimation( value ) ) );
-
-  //trikeFolder.add(mixer.clipAction)
-
-  //trikeFolder.add(animation, 'enabled').name('animated')
+  trikeFolder.add( trikeAnimationSettings, 'play' ).name( 'animated' ).onChange( () => toggleTrikeAnimation() );
+  trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
 }
 
 function changeTrikeAnimation( id: string ) {
   if ( trike ) {
     mixer.stopAllAction();
-    const clip = AnimationClip.findByName( trike_animations, trikeAnimation.animation );
+    const clip = AnimationClip.findByName( trikeAnimations, trikeAnimationSettings.animation );
     const action = mixer.clipAction( clip );
     action.play();
   }
@@ -348,8 +339,8 @@ function changeTrikeAnimation( id: string ) {
 
 function toggleTrikeAnimation() {
   if ( trike ) {
-    if ( trikeAnimation.play ) {
-      const clip = AnimationClip.findByName( trike_animations, trikeAnimation.animation );
+    if ( trikeAnimationSettings.play ) {
+      const clip = AnimationClip.findByName( trikeAnimations, trikeAnimationSettings.animation );
       const action = mixer.clipAction( clip );
       action.play();
     } else {
