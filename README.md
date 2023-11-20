@@ -16,6 +16,10 @@ npx degit pachoclo/vite-threejs-ts-template threejs-project
 ---
 
 ## Stuff included in the `scene.ts`
+- [x] Triceratops
+- [x] Triceratops Animations
+- [ ] Labels
+- [ ] Animated Labels
 
 - [x] Geometry
 - [x] Material
