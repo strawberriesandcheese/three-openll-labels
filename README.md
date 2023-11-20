@@ -1,6 +1,6 @@
 # SDF-Font-Rendering-Three.js
  
-Three.js + Vite + TypeScript starter
+Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
 
 - [Demo](https://vite-threejs-ts-template.vercel.app/)
 - [Jump to CLI commands](#cli-commands)
@@ -20,28 +20,6 @@ npx degit pachoclo/vite-threejs-ts-template threejs-project
 - [x] Triceratops Animations
 - [ ] Labels
 - [ ] Animated Labels
-
-- [x] Geometry
-- [x] Material
-- [x] Mesh
-- [x] Ambient Light
-- [x] Point Light
-- [x] Camera
-- [x] Scene
-- [x] Canvas
-- [x] Renderer (WebGL)
-- [x] Loading Manager
-- [x] Orbit Controls
-- [x] Drag Controls
-- [x] Grid
-- [x] Antialias enabled
-- [x] Transparent canvas
-- [x] Responsive renderer and camera (to canvas size)
-- [x] Animation Loop
-- [x] Shadows
-- [x] Stats (FPS, ms)
-- [x] Full screen (double-click on canvas)
-- [x] Debug GUI
 
 ## Tech Stack
 
