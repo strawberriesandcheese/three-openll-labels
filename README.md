@@ -5,12 +5,6 @@ Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
 - [Demo](https://vite-threejs-ts-template.vercel.app/)
 - [Jump to CLI commands](#cli-commands)
 
-## Copy (clone without git history)
-
-```shell
-npx degit pachoclo/vite-threejs-ts-template threejs-project
-```
-
 ---
 <img width="796" alt="screenshot" src="https://github.com/pachoclo/vite-threejs-ts-template/assets/3608140/4b377045-8be5-4021-8cb8-84346a23f680">
 ---
