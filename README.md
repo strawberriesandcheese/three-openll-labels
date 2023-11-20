@@ -7,7 +7,6 @@ Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
 
 ---
 <img width="796" alt="screenshot" src="https://github.com/pachoclo/vite-threejs-ts-template/assets/3608140/4b377045-8be5-4021-8cb8-84346a23f680">
----
 
 ## Stuff included in the `scene.ts`
 - [x] Triceratops
@@ -20,6 +19,7 @@ Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
 - Three.js
 - TypeScript
 - Vite
+- OpenLL
 
 ## CLI Commands
 
