@@ -2,7 +2,7 @@
  
 Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
 
-- [Demo](https://vite-threejs-ts-template.vercel.app/)
+- [Demo](ToDo)
 - [Jump to CLI commands](#cli-commands)
 
 ---
