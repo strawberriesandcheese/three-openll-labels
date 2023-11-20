@@ -202,10 +202,8 @@ addGui();
       mixer = new AnimationMixer( trike );
 
       trikeAnimations = gltf.animations;
-      console.log( trikeAnimations );
 
       trikeAnimations.forEach( ( animation, i ) => {
-        console.log( animation.name );
         trikeAnimationNames[ i ] = animation.name;
       } );
 
