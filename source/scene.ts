@@ -31,10 +31,15 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import './style.css';
+import { Canvas, Wizard } from 'webgl-operate';
+import { Label3DRenderer } from './renderer';
 
-const CANVAS_ID = 'scene';
+const CANVAS_ID_THREE = 'three';
+const CANVAS_ID_OPERATE = 'operate';
 
-let canvas: HTMLElement;
+let threeCanvas: HTMLCanvasElement;
+let operateCanvas: HTMLCanvasElement;
+// let context: Context;
 let renderer: WebGLRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
@@ -59,22 +64,42 @@ const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
 
+//let labelRenderPass: LabelRenderPass;
+//let label3d: Position3DLabel;
+
+setupCanvasses();
+
+initOperate();
+
 init();
 animate( 0 );
+
+addControls();
+addGui();
+
+function setupCanvasses() {
+  threeCanvas = document.querySelector( `canvas#${ CANVAS_ID_THREE }` )!;
+  operateCanvas = document.querySelector( `canvas#${ CANVAS_ID_OPERATE }` )!;
+}
+
+function toggleCanvas() {
+}
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
-    canvas = document.querySelector( `canvas#${ CANVAS_ID }` )!;
-    renderer = new WebGLRenderer( { canvas, antialias: true, alpha: true } );
+    //threeCanvas = document.querySelector( `canvas#${ CANVAS_ID }` )!;
+    renderer = new WebGLRenderer( { canvas: threeCanvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
-    camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 100 );
-    cameraControls = new OrbitControls( camera, canvas );
+    camera = new PerspectiveCamera( 50, threeCanvas.clientWidth / threeCanvas.clientHeight, 0.1, 100 );
+    cameraControls = new OrbitControls( camera, threeCanvas );
   }
+
+
 
   // ===== 👨🏻‍💼 LOADING MANAGER =====
   {
@@ -180,9 +205,6 @@ function init() {
   }
 }
 
-addControls();
-addGui();
-
 // ===== 🦕 TRICERATOPS HORRIDUS =====
 {
   const loader = new GLTFLoader();
@@ -251,8 +273,8 @@ function addControls() {
 
   // Full screen
   window.addEventListener( 'dblclick', ( event ) => {
-    if ( event.target === canvas ) {
-      toggleFullScreen( canvas );
+    if ( event.target === threeCanvas ) {
+      toggleFullScreen( threeCanvas );
     }
   } );
 }
@@ -308,6 +330,8 @@ function addGui() {
     gui.reset();
   };
   gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );
+
+  gui.add( { toggleCanvas }, 'toggleCanvas' ).name( 'Swap Canvas' );
 
   gui.close();
 }
@@ -367,10 +391,38 @@ function animate( timeStamp: number ) {
   }
 
   if ( resizeRendererToDisplaySize( renderer ) ) {
-    const canvas = renderer.domElement;
+    const canvas = threeCanvas;
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 
   renderer.render( scene, camera );
+}
+
+function initOperate() {
+  let canvas = new Canvas( operateCanvas, { antialias: false } );
+  canvas.controller.multiFrameNumber = 1;
+  canvas.framePrecision = Wizard.Precision.byte;
+  canvas.frameScale = [ 1.0, 1.0 ];
+
+  let renderer = new Label3DRenderer();
+  canvas.renderer = renderer;
+
+  // Create a target cross as reference for coordinate origin [0,0,0]
+
+  // const hlStyle = 'z-index: 1; position: absolute; width: 100%; margin: 0; margin-left: 0%;'
+  //   + 'border: none; border-bottom: 1pt solid #1c75bc; border-top: 1pt solid #1c75bc;';
+  // const vlStyle = 'z-index: 1; position: absolute; height: 100%; margin: 0; margin-top: 0%;'
+  //   + 'border: none; border-left: 1pt solid #1cbc75; border-right: 1pt solid #1cbc75;';
+
+  // const hl = document.createElement( 'hl' );
+  // hl.setAttribute( 'style', `${ hlStyle } top: 50%;` );
+  // const vl = document.createElement( 'vl' );
+  // vl.setAttribute( 'style', `${ vlStyle } left: 50%;` );
+
+
+  // const parent = canvas.element!.parentElement!;
+  // const reference = canvas.element!;
+  // parent.insertBefore( hl, reference );
+  // parent.insertBefore( vl, reference );
 }

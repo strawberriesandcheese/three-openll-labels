@@ -4,10 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/threejs-icon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three.js + TypeScript + Vite</title>
+    <style>
+      .box {
+        display: flex;
+        flex-direction: column;
+      }
+      .box > * {
+        flex: 1;
+      }
+    </style>
+    <title>SDF Font-Rendering Three.js</title>
   </head>
   <body>
-    <canvas id="scene"></canvas>
+    <div class="box">
+    <div>
+      <canvas id="operate"></canvas>
+    </div>
+    <div>
+      <canvas id="three"></canvas>
+    </div>
+    </div>
     <script type="module" src="/source/scene.ts"></script>
   </body>
 </html>

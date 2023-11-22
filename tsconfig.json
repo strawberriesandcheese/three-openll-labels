@@ -17,7 +17,8 @@
     "noUnusedParameters": false,
     "preserveConstEnums": true,
     "removeComments": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strictPropertyInitialization": false
   },
   "files": [
       "source/scene.ts"
