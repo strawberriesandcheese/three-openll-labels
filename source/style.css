@@ -18,18 +18,19 @@ body {
   margin: 0;
   display: flex;
   place-items: center;
-  height: 200vh;
+  height: 100vh;
 }
 
 .box {
   display: flex;
   flex-direction: column;
   width: 100vw;
+  align-items: center;
 }
       
 canvas {
-  width: 100vw;
-  height: 100vh;
+  width: 50vw;
+  height: 50vh;
 
   outline: none;
 
