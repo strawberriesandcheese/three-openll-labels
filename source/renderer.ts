@@ -21,8 +21,8 @@ export class Label3DRenderer extends Renderer {
 
   protected _labelPass: LabelRenderPass;
 
-  protected _labelWrap: Position3DLabel;
-  protected _labelCentered: Position3DLabel;
+  protected _labelInfo: Position3DLabel;
+  protected _labelSource: Position3DLabel;
 
   protected _camera: Camera;
   protected _navigation: Navigation;
@@ -171,16 +171,19 @@ export class Label3DRenderer extends Renderer {
 his bed into a horrible vermin. He lay on his armour-like back, and if he lifted his head a little he could see his \
 brown belly, slightly domed and divided by arches into stiff sections.';
 
-    this._labelWrap = new Position3DLabel( new Text( `Wrap: ${ kafka }` ), Label.Type.Dynamic );
-    this._labelWrap.wrap = true;
-    this._labelWrap.lineWidth = 0.8;
+    const triceratops = 'With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.';
 
-    this._labelCentered = new Position3DLabel( new Text( `Label.LineAnchor\n+\nLabel.Alignment.Center` ),
-      Label.Type.Dynamic );
-    this._labelCentered.lineAnchor = Label.LineAnchor.Center;
-    this._labelCentered.alignment = Label.Alignment.Center;
+    const source = 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus';
 
-    this._labelPass.labels = [ this._labelWrap, this._labelCentered ];
+    this._labelInfo = new Position3DLabel( new Text( `Test: ${ triceratops }` ), Label.Type.Dynamic );
+    this._labelInfo.wrap = true;
+    this._labelInfo.lineWidth = 0.8;
+
+    this._labelSource = new Position3DLabel( new Text( source ), Label.Type.Static );
+    this._labelSource.lineAnchor = Label.LineAnchor.Center;
+    this._labelSource.alignment = Label.Alignment.Center;
+
+    this._labelPass.labels = [ this._labelInfo, this._labelSource ];
 
     for ( const label of this._labelPass.labels ) {
       label.fontSize = 0.05;
@@ -190,14 +193,15 @@ brown belly, slightly domed and divided by arches into stiff sections.';
   }
 
   protected updateLabels(): void {
-    if ( !this._labelWrap.valid ) {
+    if ( !this._labelInfo.valid ) {
       return;
     }
 
-    this._labelWrap.position = [ -0.3, 0.0, 0.0 ];
-    this._labelWrap.up = [ 0.0, 0.0, -1.0 ];
+    this._labelInfo.position = [ -0.3, 0.3, 0.0 ];
+    this._labelInfo.up = [ 0.0, 1.0, 1.0 ];
 
-    this._labelCentered.position = [ 0.0, 0.0, 0.0 ];
+    this._labelSource.position = [ 0.0, 0.0, 0.0 ];
+    this._labelSource.direction = [ 1.0, 0.0, 0.0 ];
   }
 
 }
