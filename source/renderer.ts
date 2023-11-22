@@ -13,7 +13,6 @@ import {
   Renderer,
   Text,
   vec3,
-  vec4,
 } from 'webgl-operate';
 
 export class Label3DRenderer extends Renderer {

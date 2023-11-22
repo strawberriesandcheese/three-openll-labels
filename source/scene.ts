@@ -39,7 +39,6 @@ const CANVAS_ID_OPERATE = 'operate';
 
 let threeCanvas: HTMLCanvasElement;
 let operateCanvas: HTMLCanvasElement;
-// let context: Context;
 let renderer: WebGLRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
@@ -64,9 +63,6 @@ const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
 
-//let labelRenderPass: LabelRenderPass;
-//let label3d: Position3DLabel;
-
 setupCanvasses();
 
 initOperate();
@@ -82,9 +78,6 @@ function setupCanvasses() {
   operateCanvas = document.querySelector( `canvas#${ CANVAS_ID_OPERATE }` )!;
 }
 
-function toggleCanvas() {
-}
-
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
@@ -98,8 +91,6 @@ function init() {
     camera = new PerspectiveCamera( 50, threeCanvas.clientWidth / threeCanvas.clientHeight, 0.1, 100 );
     cameraControls = new OrbitControls( camera, threeCanvas );
   }
-
-
 
   // ===== 👨🏻‍💼 LOADING MANAGER =====
   {
@@ -330,8 +321,6 @@ function addGui() {
     gui.reset();
   };
   gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );
-
-  gui.add( { toggleCanvas }, 'toggleCanvas' ).name( 'Swap Canvas' );
 
   gui.close();
 }
