@@ -18,6 +18,7 @@ import {
   PlaneGeometry,
   PointLight,
   PointLightHelper,
+  SRGBColorSpace,
   Scene,
   WebGLRenderer,
 } from 'three';
@@ -86,6 +87,7 @@ function init() {
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
+    renderer.outputColorSpace = SRGBColorSpace;
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     camera = new PerspectiveCamera( 50, threeCanvas.clientWidth / threeCanvas.clientHeight, 0.1, 100 );
@@ -164,7 +166,7 @@ function init() {
 
   // ===== 🌎 ENVIRONMENT MAP =====
   {
-    const loader = new RGBELoader();
+    const loader = new RGBELoader( loadingManager );
     loader.load(
       'dresden_station_night_4k.hdr',
       function ( texture ) {
@@ -194,42 +196,43 @@ function init() {
     stats = new Stats();
     document.body.appendChild( stats.dom );
   }
-}
 
-// ===== 🦕 TRICERATOPS HORRIDUS =====
-{
-  const loader = new GLTFLoader();
-  loader.load(
-    '/animated_triceratops_skeleton.glb',
-    function ( gltf ) {
-      trike = gltf.scene;
-      trike.traverse( ( node ) => {
-        if ( node.type === 'Mesh' ) {
-          node.castShadow = true;
-          node.receiveShadow = true;
-        }
+  // ===== 🦕 TRICERATOPS HORRIDUS =====
+  {
+    const loader = new GLTFLoader( loadingManager );
+
+    loader.load(
+      '/animated_triceratops_skeleton.glb',
+      function ( gltf ) {
+        trike = gltf.scene;
+        trike.traverse( ( node ) => {
+          if ( node.type === 'Mesh' ) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        } );
+
+        scene.add( trike );
+
+        mixer = new AnimationMixer( trike );
+
+        trikeAnimations = gltf.animations;
+
+        trikeAnimations.forEach( ( animation, i ) => {
+          trikeAnimationNames[ i ] = animation.name;
+        } );
+
+        trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: false };
+
+        trike.position.y = 0.8;
+
+        addTrikeGui();
+      },
+      undefined,
+      function ( error ) {
+        console.error( error );
       } );
-
-      scene.add( trike );
-
-      mixer = new AnimationMixer( trike );
-
-      trikeAnimations = gltf.animations;
-
-      trikeAnimations.forEach( ( animation, i ) => {
-        trikeAnimationNames[ i ] = animation.name;
-      } );
-
-      trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: false };
-
-      trike.position.y = 0.8;
-
-      addTrikeGui();
-    },
-    undefined,
-    function ( error ) {
-      console.error( error );
-    } );
+  }
 }
 
 function addControls() {
