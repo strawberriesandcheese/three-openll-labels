@@ -1,6 +1,6 @@
 # SDF-Font-Rendering-Three.js
  
-Three.js + Vite + TypeScript Project to showcase SDF-based Font Rendering
+Three.js + Vite + TypeScript Project to showcase OpenLL-based Font Rendering
 
 - [Demo]()
 - [Jump to CLI commands](#cli-commands)
