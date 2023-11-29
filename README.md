@@ -1,4 +1,4 @@
-# SDF-Font-Rendering-Three.js
+# three-openll-labels
  
 Three.js + Vite + TypeScript Project to showcase OpenLL-based Font Rendering
 
