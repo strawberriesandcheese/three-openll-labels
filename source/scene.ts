@@ -33,7 +33,7 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import './style.css';
 import { Canvas, Wizard } from 'webgl-operate';
-import { Label3DRenderer } from './renderer';
+import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
 
 const CANVAS_ID_THREE = 'three';
 const CANVAS_ID_OPERATE = 'operate';
