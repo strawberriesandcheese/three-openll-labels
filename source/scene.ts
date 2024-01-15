@@ -5,12 +5,21 @@ import {
   AnimationMixer,
   AxesHelper,
   BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
   Clock,
+  Color,
+  DoubleSide,
+  DynamicDrawUsage,
   EquirectangularReflectionMapping,
   GridHelper,
   Group,
+  InstancedBufferAttribute,
+  InstancedBufferGeometry,
+  InstancedMesh,
   LoadingManager,
   Mesh,
+  MeshBasicMaterial,
   MeshLambertMaterial,
   MeshStandardMaterial,
   PCFSoftShadowMap,
@@ -18,8 +27,11 @@ import {
   PlaneGeometry,
   PointLight,
   PointLightHelper,
+  RawShaderMaterial,
   SRGBColorSpace,
   Scene,
+  ShaderMaterial,
+  Vector3,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -32,8 +44,11 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import './style.css';
-import { Canvas, Wizard } from 'webgl-operate';
-import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
+//import { Canvas, Wizard } from 'webgl-operate';
+//import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
+
+import vertexShader from './shaders/font.vert?raw';
+import fragmentShader from './shaders/font.frag?raw';
 
 const CANVAS_ID_THREE = 'three';
 const CANVAS_ID_OPERATE = 'operate';
@@ -66,7 +81,7 @@ let trikeAnimationSettings: { animation: string, play: boolean; };
 
 setupCanvasses();
 
-initOperate();
+//initOperate();
 
 init();
 animate( 0 );
@@ -76,7 +91,7 @@ addGui();
 
 function setupCanvasses() {
   threeCanvas = document.querySelector( `canvas#${ CANVAS_ID_THREE }` )!;
-  operateCanvas = document.querySelector( `canvas#${ CANVAS_ID_OPERATE }` )!;
+  //operateCanvas = document.querySelector( `canvas#${ CANVAS_ID_OPERATE }` )!;
 }
 
 function init() {
@@ -158,6 +173,44 @@ function init() {
     //scene.add(cube)
     scene.add( plane );
   }
+  // ===== 🎥 FONT =====
+  {
+    const fontGeometry = new InstancedBufferGeometry();
+    const vertices = new Float32Array( [
+      0.0, 0.0, 0.0, // v0
+      1.0, 0.0, 0.0, // v1
+      0.0, 1.0, 0.0, // v2
+
+      0.0, 1.0, 0.0, // v3
+      1.0, 0.0, 0.0, // v4
+      1.0, 1.0, 0.0  // v5
+    ] );
+
+    const instancePosition = new Float32Array( [
+      0.0, 0.0, 0.0,
+      2.0, 0.0, 0.0,
+    ] );
+    fontGeometry.setAttribute( 'position', new BufferAttribute( vertices, 3 ) );
+    fontGeometry.setAttribute( 'origin', new InstancedBufferAttribute( instancePosition, 3 ) );
+    fontGeometry.setAttribute( 'tangent', new InstancedBufferAttribute( new Float32Array(), 3 ) );
+    fontGeometry.setAttribute( 'up', new InstancedBufferAttribute( new Float32Array(), 3 ) );
+    fontGeometry.setAttribute( 'texCoords', new InstancedBufferAttribute( new Float32Array(), 4 ) );
+
+    fontGeometry.instanceCount = 2;
+    const material = new RawShaderMaterial( {
+      uniforms: {
+        'color': { value: new Vector3( 1, 0, 0 ) },
+      },
+      vertexShader,
+      fragmentShader,
+      side: DoubleSide,
+    } );
+
+    const mesh = new Mesh( fontGeometry, material );
+
+    scene.add( mesh );
+  }
+
 
   // ===== 🎥 CAMERA =====
   {
@@ -391,6 +444,7 @@ function animate( timeStamp: number ) {
   renderer.render( scene, camera );
 }
 
+/*
 function initOperate() {
   let canvas = new Canvas( operateCanvas, { antialias: false } );
   canvas.controller.multiFrameNumber = 1;
@@ -418,3 +472,4 @@ function initOperate() {
   // parent.insertBefore( hl, reference );
   // parent.insertBefore( vl, reference );
 }
+*/

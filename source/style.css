@@ -29,8 +29,10 @@ body {
 }
       
 canvas {
-  width: 50vw;
-  height: 50vh;
+  /*width: 50vw;*/
+  /*height: 50vh;*/
+
+  width: 100vw;
 
   outline: none;
 
