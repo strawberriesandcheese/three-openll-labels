@@ -5,21 +5,12 @@ import {
   AnimationMixer,
   AxesHelper,
   BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
   Clock,
-  Color,
-  DoubleSide,
-  DynamicDrawUsage,
   EquirectangularReflectionMapping,
   GridHelper,
   Group,
-  InstancedBufferAttribute,
-  InstancedBufferGeometry,
-  InstancedMesh,
   LoadingManager,
   Mesh,
-  MeshBasicMaterial,
   MeshLambertMaterial,
   MeshStandardMaterial,
   PCFSoftShadowMap,
@@ -27,11 +18,8 @@ import {
   PlaneGeometry,
   PointLight,
   PointLightHelper,
-  RawShaderMaterial,
   SRGBColorSpace,
   Scene,
-  ShaderMaterial,
-  Vector3,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -47,8 +35,7 @@ import './style.css';
 //import { Canvas, Wizard } from 'webgl-operate';
 //import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
 
-import vertexShader from './shaders/font.vert?raw';
-import fragmentShader from './shaders/font.frag?raw';
+import { Label } from './label';
 
 const CANVAS_ID_THREE = 'three';
 const CANVAS_ID_OPERATE = 'operate';
@@ -175,39 +162,7 @@ function init() {
   }
   // ===== 🎥 FONT =====
   {
-    const fontGeometry = new InstancedBufferGeometry();
-    const vertices = new Float32Array( [
-      0.0, 0.0, 0.0, // v0
-      1.0, 0.0, 0.0, // v1
-      0.0, 1.0, 0.0, // v2
-
-      0.0, 1.0, 0.0, // v3
-      1.0, 0.0, 0.0, // v4
-      1.0, 1.0, 0.0  // v5
-    ] );
-
-    const instancePosition = new Float32Array( [
-      0.0, 0.0, 0.0,
-      2.0, 0.0, 0.0,
-    ] );
-    fontGeometry.setAttribute( 'position', new BufferAttribute( vertices, 3 ) );
-    fontGeometry.setAttribute( 'origin', new InstancedBufferAttribute( instancePosition, 3 ) );
-    fontGeometry.setAttribute( 'tangent', new InstancedBufferAttribute( new Float32Array(), 3 ) );
-    fontGeometry.setAttribute( 'up', new InstancedBufferAttribute( new Float32Array(), 3 ) );
-    fontGeometry.setAttribute( 'texCoords', new InstancedBufferAttribute( new Float32Array(), 4 ) );
-
-    fontGeometry.instanceCount = 2;
-    const material = new RawShaderMaterial( {
-      uniforms: {
-        'color': { value: new Vector3( 1, 0, 0 ) },
-      },
-      vertexShader,
-      fragmentShader,
-      side: DoubleSide,
-    } );
-
-    const mesh = new Mesh( fontGeometry, material );
-
+    const mesh = new Label( 9 );
     scene.add( mesh );
   }
 
