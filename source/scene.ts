@@ -6,6 +6,7 @@ import {
   AxesHelper,
   BoxGeometry,
   Clock,
+  Color,
   EquirectangularReflectionMapping,
   GridHelper,
   Group,
@@ -164,7 +165,7 @@ function init() {
   // ===== 🎥 FONT =====
   {
     let texture = new TextureLoader( loadingManager ).load( 'mikado-medium-fed68123.png' );
-    const mesh = new Label( 9, texture );
+    const mesh = new Label( texture, 9, new Color( 0xff0000 ) );
     scene.add( mesh );
   }
 

@@ -1,5 +1,6 @@
 import {
   BufferAttribute,
+  Color,
   DoubleSide,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
@@ -33,8 +34,11 @@ class Label extends Mesh {
   ups: Float32Array;
   texCoords: Float32Array;
 
-  constructor( count: number, map: Texture ) {
+  constructor( map: Texture, count: number, color: Color ) {
     super();
+
+    //count = count ? count : 1;
+    //color = color ? color : new Color( 0x000000 );
 
     this.origins = new Float32Array( count * 3 );
     this.tangents = new Float32Array( count * 3 );
@@ -44,7 +48,7 @@ class Label extends Mesh {
     this.geometry = new InstancedBufferGeometry();
     this.geometry.instanceCount = count;
 
-    this.material = this.createShaderMaterial( map );
+    this.material = this.createShaderMaterial( map, color );
 
     this.initBuffers();
 
@@ -97,10 +101,10 @@ class Label extends Mesh {
     }
   }
 
-  createShaderMaterial( map: Texture ): ShaderMaterial {
+  createShaderMaterial( map: Texture, color: Color ): ShaderMaterial {
     return ( new ShaderMaterial( {
       uniforms: {
-        color: { value: new Vector3( 1, 0, 0 ) },
+        color: { value: color },
         map: { value: map },
       },
       vertexShader,
