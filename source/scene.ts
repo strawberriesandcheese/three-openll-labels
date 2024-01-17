@@ -20,6 +20,7 @@ import {
   PointLightHelper,
   SRGBColorSpace,
   Scene,
+  TextureLoader,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -162,10 +163,10 @@ function init() {
   }
   // ===== 🎥 FONT =====
   {
-    const mesh = new Label( 9 );
+    let texture = new TextureLoader( loadingManager ).load( 'mikado-medium-fed68123.png' );
+    const mesh = new Label( 9, texture );
     scene.add( mesh );
   }
-
 
   // ===== 🎥 CAMERA =====
   {

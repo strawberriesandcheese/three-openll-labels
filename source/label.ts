@@ -4,7 +4,8 @@ import {
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Mesh,
-  RawShaderMaterial,
+  ShaderMaterial,
+  Texture,
   Vector3
 } from 'three';
 
@@ -14,15 +15,9 @@ import fragmentShader from './shaders/font.frag?raw';
 class Label extends Mesh {
 
   readonly geometry: InstancedBufferGeometry;
+  readonly material: ShaderMaterial;
+  //readonly map: Texture;
 
-  material = new RawShaderMaterial( {
-    uniforms: {
-      'color': { value: new Vector3( 1, 0, 0 ) },
-    },
-    vertexShader,
-    fragmentShader,
-    side: DoubleSide,
-  } );
   readonly vertices = new Float32Array( [
     0.0, 0.0, 0.0, // v0
     1.0, 0.0, 0.0, // v1
@@ -38,7 +33,7 @@ class Label extends Mesh {
   ups: Float32Array;
   texCoords: Float32Array;
 
-  constructor( count: number ) {
+  constructor( count: number, map: Texture ) {
     super();
 
     this.origins = new Float32Array( count * 3 );
@@ -49,7 +44,7 @@ class Label extends Mesh {
     this.geometry = new InstancedBufferGeometry();
     this.geometry.instanceCount = count;
 
-    this.material = this.material;
+    this.material = this.createShaderMaterial( map );
 
     this.initBuffers();
 
@@ -60,6 +55,7 @@ class Label extends Mesh {
     this.initOrigins();
     this.randomlyInitTangents();
     this.randomlyInitUps();
+    this.randomlyInitTexCoords();
 
     this.geometry.setAttribute( 'position', new BufferAttribute( this.vertices, 3 ) );
     this.geometry.setAttribute( 'origin', new InstancedBufferAttribute( this.origins, 3 ) );
@@ -90,6 +86,28 @@ class Label extends Mesh {
       this.ups[ 3 * i + 1 ] = Math.random();
       this.ups[ 3 * i + 2 ] = 0;
     }
+  }
+
+  randomlyInitTexCoords() {
+    for ( let i = 0; i < this.geometry.instanceCount; i++ ) {
+      this.texCoords[ 4 * i + 0 ] = Math.random() * 0.5;
+      this.texCoords[ 4 * i + 1 ] = Math.random() * 0.5;
+      this.texCoords[ 4 * i + 2 ] = this.texCoords[ 4 * i + 0 ] + Math.random() * 0.5;
+      this.texCoords[ 4 * i + 3 ] = this.texCoords[ 4 * i + 1 ] + Math.random() * 0.5;
+    }
+  }
+
+  createShaderMaterial( map: Texture ): ShaderMaterial {
+    return ( new ShaderMaterial( {
+      uniforms: {
+        color: { value: new Vector3( 1, 0, 0 ) },
+        map: { value: map },
+      },
+      vertexShader,
+      fragmentShader,
+
+      side: DoubleSide,
+    } ) );
   }
 }
 
