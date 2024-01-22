@@ -21,7 +21,6 @@ import {
   PointLightHelper,
   SRGBColorSpace,
   Scene,
-  TextureLoader,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -37,7 +36,8 @@ import './style.css';
 //import { Canvas, Wizard } from 'webgl-operate';
 //import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
 
-import { Label } from './label';
+import { Label } from './Label';
+import { FontFaceLoader } from './FontFaceLoader';
 
 const CANVAS_ID_THREE = 'three';
 const CANVAS_ID_OPERATE = 'operate';
@@ -164,9 +164,10 @@ function init() {
   }
   // ===== 🎥 FONT =====
   {
-    let texture = new TextureLoader( loadingManager ).load( 'mikado-medium-fed68123.png' );
-    const mesh = new Label( texture, 9, new Color( 0xff0000 ) );
-    scene.add( mesh );
+    const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
+    const label = new Label( fontface, 9, new Color( 0xff0000 ) );
+
+    scene.add( label );
   }
 
   // ===== 🎥 CAMERA =====
@@ -179,7 +180,7 @@ function init() {
     const loader = new RGBELoader( loadingManager );
     loader.load(
       'dresden_station_night_4k.hdr',
-      function ( texture ) {
+      ( texture ) => {
         texture.mapping = EquirectangularReflectionMapping;
         scene.background = texture;
       } );

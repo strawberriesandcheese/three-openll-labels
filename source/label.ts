@@ -7,8 +7,9 @@ import {
   Mesh,
   ShaderMaterial,
   Texture,
-  Vector3
 } from 'three';
+
+import { FontFace } from './FontFace';
 
 import vertexShader from './shaders/font.vert?raw';
 import fragmentShader from './shaders/font.frag?raw';
@@ -16,8 +17,11 @@ import fragmentShader from './shaders/font.frag?raw';
 class Label extends Mesh {
 
   readonly geometry: InstancedBufferGeometry;
-  readonly material: ShaderMaterial;
-  //readonly map: Texture;
+
+  protected fontFace: FontFace;
+  protected needsInitialLayout = true;
+  protected needsLayout = false;
+  protected color = new Color( 0x000000 );
 
   readonly vertices = new Float32Array( [
     0.0, 0.0, 0.0, // v0
@@ -34,11 +38,8 @@ class Label extends Mesh {
   ups: Float32Array;
   texCoords: Float32Array;
 
-  constructor( map: Texture, count: number, color: Color ) {
+  constructor( fontFace: FontFace, count: number, color: Color ) {
     super();
-
-    //count = count ? count : 1;
-    //color = color ? color : new Color( 0x000000 );
 
     this.origins = new Float32Array( count * 3 );
     this.tangents = new Float32Array( count * 3 );
@@ -48,11 +49,23 @@ class Label extends Mesh {
     this.geometry = new InstancedBufferGeometry();
     this.geometry.instanceCount = count;
 
-    this.material = this.createShaderMaterial( map, color );
+    this.fontFace = fontFace;
+    this.color = color;
 
     this.initBuffers();
 
     this.updateMorphTargets;
+  }
+
+  onBeforeRender() {
+    if ( this.needsInitialLayout && this.fontFace.ready ) {
+      this.needsLayout = true;
+      this.needsInitialLayout = false;
+      this.material = this.createShaderMaterial( this.fontFace.glyphTexture, this.color );
+    }
+    if ( this.needsLayout ) {
+      this.layout();
+    }
   }
 
   initBuffers() {
@@ -112,6 +125,11 @@ class Label extends Mesh {
 
       side: DoubleSide,
     } ) );
+  }
+
+  layout() {
+    console.log( this.fontFace.size );
+    this.needsLayout = false;
   }
 }
 
