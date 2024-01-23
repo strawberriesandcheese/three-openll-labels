@@ -1,4 +1,7 @@
 import { Texture, Vector2, Vector4 } from "three";
+import { Glyph } from "./Glyph";
+
+type Padding = { top: number, right: number, bottom: number, left: number; };
 
 export class FontFace {
 
@@ -8,14 +11,71 @@ export class FontFace {
   protected _descent = 0.0;
   protected _lineGap = 0.0;
   protected _glyphTextureExtent: Vector2 = new Vector2( 0.0, 0.0 );
-  protected _glyphTexturePadding: Vector4 = new Vector4( 0.0, 0.0, 0.0, 0.0 );
+  protected _glyphTexturePadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
   protected _glyphTexture: Texture;
 
   private _ready = false;
 
+  protected _glyphs = new Map<number, Glyph>;
+
 
   constructor() {
   };
+
+  /**
+     * Check if a glyph of a specific index is available.
+     * @param index - Index of the glyph to access.
+     * @returns - True if a glyph for the provided index was added.
+     */
+  hasGlyph( index: number ): boolean {
+    return !!this._glyphs.get( index );
+  }
+
+  /**
+   * Direct access to an indexed glyph. If the glyph does not exist, an empty glyph is returned without adding it
+   * to glyphs. The glyph atlas might be loaded asynchronously, thus, new glyphs are expected to be added via
+   * addGlyph.
+   * @param index - Index of the glyph to access.
+   * @returns - Glyph with the matching index or an empty glyph, if index has not match
+   */
+  glyph( index: number ): Glyph {
+    const existingGlyph = this._glyphs.get( index );
+    if ( existingGlyph ) {
+      return existingGlyph;
+    }
+    const glyph = new Glyph();
+    glyph.index = index;
+    return glyph;
+  }
+
+  /**
+   * Add a glyph to the font face's set of glyphs. If the glyph already exists, the existing glyph remains.
+   * @param glyph - The glyph to add to the set of glyphs.
+   */
+  addGlyph( glyph: Glyph ): void {
+    if ( this.hasGlyph( glyph.index ) ) {
+      console.error( 'Expected glyph to not already exist' );
+      return;
+    }
+    this._glyphs.set( glyph.index, glyph );
+  }
+
+  /**
+     * Set the kerning for a glyph w.r.t. to a subsequent glyph in texture space (px). If the glyph is known to this
+     * font face, the values are forwarded to the glyphs kerning setter (see Glyph for more information).
+     * @param index - The target glyph index.
+     * @param subsequentIndex - The glyph index of the respective subsequent/next glyph.
+     * @param kerning - Kerning of the two glyphs in pixel.
+     */
+  setKerning( index: GLsizei, subsequentIndex: GLsizei, kerning: number ): void {
+    const glyph = this._glyphs.get( index );
+    if ( !glyph || !this.hasGlyph( subsequentIndex ) ) {
+      console.error( `Expected glyph or glyph of subsequent index to exist, \
+                given ${ index } and ${ subsequentIndex } respectively` );
+      return;
+    }
+    glyph.setKerning( subsequentIndex, kerning );
+  }
 
   /**
      * The size of the font in texture space (px).
@@ -23,7 +83,7 @@ export class FontFace {
      */
   set size( size: number ) {
     if ( size <= 0 ) {
-      console.warn( `Expected size to be greater than 0.0, given ${ size }` );
+      console.error( `Expected size to be greater than 0.0, given ${ size }` );
       return;
     }
     this._size = size;
@@ -38,7 +98,7 @@ export class FontFace {
    */
   set base( base: number ) {
     if ( base <= 0 ) {
-      console.warn( `Expected base to be greater than 0.0, given ${ base }` );
+      console.error( `Expected base to be greater than 0.0, given ${ base }` );
       return;
     }
     this._base = base;
@@ -54,7 +114,7 @@ export class FontFace {
    */
   set ascent( ascent: number ) {
     if ( ascent <= 0 ) {
-      console.warn( `Expected ascent to be greater than 0.0, given ${ ascent }` );
+      console.error( `Expected ascent to be greater than 0.0, given ${ ascent }` );
       return;
     }
     this._ascent = ascent;
@@ -98,7 +158,7 @@ export class FontFace {
      */
   set lineHeight( lineHeight: number ) {
     if ( this.size <= 0 ) {
-      console.warn( 'Expected size to be greater than zero to derive line gap from line height' );
+      console.error( 'Expected size to be greater than zero to derive line gap from line height' );
       return;
     }
     this.lineGap = lineHeight - this.size;
@@ -133,11 +193,11 @@ export class FontFace {
    */
   set glyphTextureExtent( extent: Vector2 ) {
     if ( extent.x <= 0 ) {
-      console.warn( `Expected extent.x to be greater than 0.0, given ${ extent.x }` );
+      console.error( `Expected extent.x to be greater than 0.0, given ${ extent.x }` );
       return;
     }
     if ( extent.y <= 0 ) {
-      console.warn( `Expected extent.y to be greater than 0.0, given ${ extent.y }` );
+      console.error( `Expected extent.y to be greater than 0.0, given ${ extent.y }` );
       return;
     }
     this._glyphTextureExtent = extent;
@@ -155,26 +215,26 @@ export class FontFace {
    * @param padding - CSS style (top, right, bottom, left) padding applied to every glyph within the texture in
    * px.
    */
-  set glyphTexturePadding( padding: Vector4 ) {
-    if ( padding.x < 0 ) {
-      console.warn( `expected padding.x to be greater than 0.0, given ${ padding.x }` );
+  set glyphTexturePadding( padding: Padding ) {
+    if ( padding.top < 0 ) {
+      console.error( `expected padding.top to be greater than 0.0, given ${ padding.top }` );
       return;
     }
-    if ( padding.y < 0 ) {
-      console.warn( `Expected padding.y to be greater than 0.0, given ${ padding.y }` );
+    if ( padding.right < 0 ) {
+      console.error( `Expected padding.right to be greater than 0.0, given ${ padding.right }` );
       return;
     }
-    if ( padding.z < 0 ) {
-      console.warn( `expected padding.z to be greater than 0.0, given ${ padding.z }` );
+    if ( padding.bottom < 0 ) {
+      console.error( `expected padding.bottom to be greater than 0.0, given ${ padding.bottom }` );
       return;
     }
-    if ( padding.w < 0 ) {
-      console.warn( `Expected padding.w to be greater than 0.0, given ${ padding.w }` );
+    if ( padding.left < 0 ) {
+      console.error( `Expected padding.left to be greater than 0.0, given ${ padding.left }` );
       return;
     }
     this._glyphTexturePadding = padding;
   }
-  get glyphTexturePadding(): Vector4 {
+  get glyphTexturePadding(): { top: number, right: number, bottom: number, left: number; } {
     return this._glyphTexturePadding;
   }
 

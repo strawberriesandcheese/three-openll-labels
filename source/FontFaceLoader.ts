@@ -1,5 +1,6 @@
 import { FontFace } from './FontFace';
 import { Loader, FileLoader, LoadingManager, Cache, TextureLoader, Vector4, Vector2 } from 'three';
+import { Glyph } from './Glyph';
 
 type StringPairs = Map<string, string>;
 
@@ -39,15 +40,15 @@ class FontFaceLoader extends Loader {
             case 'common':
               status = this.processCommon( attributes, fontFace );
               break;
-            /*
+
             case 'char':
-              status = this.processChar( attributes, this );
+              status = this.processChar( attributes, fontFace );
               break;
 
             case 'kerning':
-              this.processKerning( attributes, this );
+              this.processKerning( attributes, fontFace );
               break;
-            */
+
             default:
               break;
           }
@@ -101,12 +102,13 @@ class FontFaceLoader extends Loader {
       return false;
     }
 
-    const padding: Vector4 = new Vector4(
-      parseFloat( values[ 0 ] ), /* top */
-      parseFloat( values[ 1 ] ), /* right */
-      parseFloat( values[ 2 ] ), /* bottom */
-      parseFloat( values[ 3 ] ) /* left */
-    );
+    const padding = {
+      top: parseFloat( values[ 0 ] ),
+      right: parseFloat( values[ 1 ] ),
+      bottom: parseFloat( values[ 2 ] ),
+      left: parseFloat( values[ 3 ] )
+    };
+
     fontFace.glyphTexturePadding = padding;
 
     return true;
@@ -141,6 +143,92 @@ class FontFaceLoader extends Loader {
       parseFloat( pairs.get( 'scaleW' )! ),
       parseFloat( pairs.get( 'scaleH' )! )
     );
+
+    return true;
+  }
+
+  /**
+     * Parses the char fields for character id (code point), x, y, width, height, xoffset, yoffset, xadvance to
+     * store them in the font face as instances of Glyph.
+     * This relies on fontFace.base and fontFace.glyphTextureExtent, so execute processCommon() first.
+     * @param stream - The stream of the 'char' identifier.
+     * @param fontFace - The font face in which the loaded glyph texture is stored.
+     */
+
+
+  protected processChar( stream: Array<string>, fontFace: FontFace ): boolean {
+    const pairs: StringPairs = new Map<string, string>();
+    const success = this.readKeyValuePairs( stream,
+      [ 'id', 'x', 'y', 'width', 'height', 'xoffset', 'yoffset', 'xadvance' ], pairs );
+    if ( !success ) {
+      return false;
+    }
+
+    const index: number = parseInt( pairs.get( 'id' )!, 10 );
+    if ( index <= 0.0 ) {
+      console.warn( `Expected glyph index to be greater than 0, given ${ index }` );
+      return false;
+    }
+
+    const glyph = new Glyph();
+    glyph.index = index;
+
+    const extentScale: Vector2 = new Vector2(
+      1.0 / fontFace.glyphTextureExtent.x,
+      1.0 / fontFace.glyphTextureExtent.y,
+    );
+    const extent: Vector2 = new Vector2(
+      parseFloat( pairs.get( 'width' )! ),
+      parseFloat( pairs.get( 'height' )! ),
+    );
+
+    glyph.subTextureOrigin = new Vector2(
+      parseFloat( pairs.get( 'x' )! ) * extentScale.x,
+      1.0 - ( parseFloat( pairs.get( 'y' )! ) + extent.y ) * extentScale.y,
+    );
+
+    glyph.extent = extent;
+
+    glyph.subTextureExtent.x = extent.x * extentScale.x;
+    glyph.subTextureExtent.y = extent.y * extentScale.y;
+
+    glyph.bearingFromFontBaseAndOffset( fontFace.base,
+      parseFloat( pairs.get( 'xoffset' )! ),
+      parseFloat( pairs.get( 'yoffset' )! ),
+    );
+
+    glyph.advance = parseFloat( pairs.get( 'xadvance' )! );
+
+    fontFace.addGlyph( glyph );
+    return true;
+  }
+
+  /**
+     * Parses the kerning fields for first and second character and the amount, to store them in the font face.
+     * @param stream The stream of the 'kerning' identifier.
+     * @param fontFace The font face in which the kerning tuples are stored.
+     */
+  protected processKerning( stream: Array<string>, fontFace: FontFace ): boolean {
+    const pairs: StringPairs = new Map<string, string>();
+    const success = this.readKeyValuePairs( stream, [ 'first', 'second', 'amount' ], pairs );
+    if ( !success ) {
+      return false;
+    }
+
+    const first: number = parseInt( pairs.get( 'first' )!, 10 );
+    if ( first <= 0.0 ) {
+      console.warn( `Expected kerning's first to be greater than 0, given ${ first }` );
+      return false;
+    }
+
+    const second: number = parseInt( pairs.get( 'second' )!, 10 );
+    if ( second <= 0.0 ) {
+      console.warn( `Expected kerning's second to be greater than 0, given ${ second }` );
+      return false;
+    }
+
+    const kerning: number = parseFloat( pairs.get( 'amount' )! );
+    fontFace.setKerning( first, second, kerning );
 
     return true;
   }

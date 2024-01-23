@@ -21,6 +21,7 @@ import {
   PointLightHelper,
   SRGBColorSpace,
   Scene,
+  Vector3,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -146,7 +147,7 @@ function init() {
     cube.castShadow = true;
     cube.position.y = 0.5;
 
-    const planeGeometry = new PlaneGeometry( 3, 3 );
+    const planeGeometry = new PlaneGeometry( 4, 4 );
     const planeMaterial = new MeshLambertMaterial( {
       color: 'gray',
       emissive: 'teal',
@@ -165,7 +166,9 @@ function init() {
   // ===== 🎥 FONT =====
   {
     const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
-    const label = new Label( fontface, 9, new Color( 0xff0000 ) );
+    const label = new Label( "Hello Willy", fontface, new Color( 0x000000 ) );
+    label.scale.set( 1, 1, 1 );
+    label.position.set( 0, 0, 0 );
 
     scene.add( label );
   }
