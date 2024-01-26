@@ -1,5 +1,5 @@
 import { FontFace } from './FontFace';
-import { Loader, FileLoader, LoadingManager, Cache, TextureLoader, Vector4, Vector2 } from 'three';
+import { Loader, FileLoader, LoadingManager, Cache, TextureLoader, Vector2 } from 'three';
 import { Glyph } from './Glyph';
 
 type StringPairs = Map<string, string>;

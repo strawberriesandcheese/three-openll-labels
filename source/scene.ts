@@ -163,10 +163,11 @@ function init() {
     //scene.add(cube)
     scene.add( plane );
   }
-  // ===== 🎥 FONT =====
+  // ===== 🆎 FONT =====
   {
     const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
-    const label = new Label( "Hello Willy", fontface, new Color( 0x000000 ) );
+    const label = new Label( "No", fontface, new Color( 0x000000 ) );
+    setTimeout( () => label.text = label.text = "Yes", 1000 );
     label.scale.set( 1, 1, 1 );
     label.position.set( 0, 0, 0 );
 

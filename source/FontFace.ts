@@ -1,9 +1,9 @@
-import { Texture, Vector2, Vector4 } from "three";
+import { Texture, Vector2 } from "three";
 import { Glyph } from "./Glyph";
 
 type Padding = { top: number, right: number, bottom: number, left: number; };
 
-export class FontFace {
+class FontFace {
 
   protected _size: number;
   protected _base: number;
@@ -261,3 +261,5 @@ export class FontFace {
     return this._ready;
   }
 }
+
+export { FontFace };

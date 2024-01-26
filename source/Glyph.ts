@@ -6,7 +6,7 @@ import { Vector2 } from "three";
  * during layouting and rendering.
  * The following definitions are applied: http://chanae.walon.org/pub/ttf/ttf_glyphs.htm
  */
-export class Glyph {
+class Glyph {
 
   protected _index: number;
   protected _advance: number;
@@ -157,5 +157,6 @@ export class Glyph {
   get advance(): number {
     return this._advance;
   }
-
 }
+
+export { Glyph };
