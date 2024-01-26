@@ -147,14 +147,14 @@ function init() {
     cube.castShadow = true;
     cube.position.y = 0.5;
 
-    const planeGeometry = new PlaneGeometry( 4, 4 );
+    const planeGeometry = new PlaneGeometry( 1000, 1000 );
     const planeMaterial = new MeshLambertMaterial( {
       color: 'gray',
       emissive: 'teal',
       emissiveIntensity: 0.2,
       side: 2,
-      transparent: true,
-      opacity: 0.4,
+      //transparent: false,
+      //opacity: 0.4,
     } );
     const plane = new Mesh( planeGeometry, planeMaterial );
     plane.rotateX( Math.PI / 2 );
@@ -167,9 +167,12 @@ function init() {
   {
     const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
     const label = new Label( "No", fontface, new Color( 0x000000 ) );
-    setTimeout( () => label.text = label.text = "Yes", 1000 );
-    label.scale.set( 1, 1, 1 );
-    label.position.set( 0, 0, 0 );
+    setTimeout( () => {
+      label.text = label.text = "Yes";
+      label.color = new Color( 0xffffff );
+    }, 1000 );
+    label.scale.set( 0.5, 0.5, 0.5 );
+    label.position.set( 0.5, 1, 0 );
 
     scene.add( label );
   }
@@ -254,6 +257,9 @@ function addControls() {
   cameraControls.target = cube.position.clone();
   cameraControls.enableDamping = true;
   cameraControls.autoRotate = false;
+  cameraControls.maxDistance = 20;
+  cameraControls.minDistance = 1;
+  cameraControls.maxPolarAngle = 1.5;
   cameraControls.update();
 
   dragControls = new DragControls( [ cube ], camera, renderer.domElement );
@@ -405,33 +411,3 @@ function animate( timeStamp: number ) {
 
   renderer.render( scene, camera );
 }
-
-/*
-function initOperate() {
-  let canvas = new Canvas( operateCanvas, { antialias: false } );
-  canvas.controller.multiFrameNumber = 1;
-  canvas.framePrecision = Wizard.Precision.byte;
-  canvas.frameScale = [ 1.0, 1.0 ];
-
-  let renderer = new Label3DRenderer();
-  canvas.renderer = renderer;
-
-  // Create a target cross as reference for coordinate origin [0,0,0]
-
-  // const hlStyle = 'z-index: 1; position: absolute; width: 100%; margin: 0; margin-left: 0%;'
-  //   + 'border: none; border-bottom: 1pt solid #1c75bc; border-top: 1pt solid #1c75bc;';
-  // const vlStyle = 'z-index: 1; position: absolute; height: 100%; margin: 0; margin-top: 0%;'
-  //   + 'border: none; border-left: 1pt solid #1cbc75; border-right: 1pt solid #1cbc75;';
-
-  // const hl = document.createElement( 'hl' );
-  // hl.setAttribute( 'style', `${ hlStyle } top: 50%;` );
-  // const vl = document.createElement( 'vl' );
-  // vl.setAttribute( 'style', `${ vlStyle } left: 50%;` );
-
-
-  // const parent = canvas.element!.parentElement!;
-  // const reference = canvas.element!;
-  // parent.insertBefore( hl, reference );
-  // parent.insertBefore( vl, reference );
-}
-*/

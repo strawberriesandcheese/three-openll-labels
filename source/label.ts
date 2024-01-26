@@ -196,6 +196,12 @@ class Label extends Mesh {
     this.texCoords = texCoords;
   }
 
+  updateColor() {
+    this.material.uniforms.color.value = this.color;
+    // following line might not be necessary
+    this.material.uniforms.color.value.needsUpdate = true;
+  }
+
   createShaderMaterial( map: Texture, color: Color ): ShaderMaterial {
     return ( new ShaderMaterial( {
       uniforms: {
@@ -268,6 +274,14 @@ class Label extends Mesh {
   }
   protected set geometry( geometry: InstancedBufferGeometry ) {
     this._geometry = geometry;
+  }
+
+  get color(): Color {
+    return this._color;
+  }
+  set color( color: Color ) {
+    this._color = color;
+    this.updateColor();
   }
 
 }
