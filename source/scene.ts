@@ -223,10 +223,10 @@ function init() {
 
     loader.load(
       '/animated_triceratops_skeleton.glb',
-      function ( gltf ) {
+      ( gltf ) => {
         trike = gltf.scene;
+        let bones: Bone[] = new Array<Bone>;
         trike.traverse( ( node ) => {
-          //console.log( node );
           if ( node.type === 'SkinnedMesh' ) {
             const mesh = node as SkinnedMesh;
             mesh.castShadow = true;
@@ -240,16 +240,19 @@ function init() {
             material.roughnessMap!.colorSpace = LinearSRGBColorSpace;
           }
           if ( node.type === 'Bone' ) {
+            // it is discouraged to change the scene tree in the traverse callback, so we just save all bones
             const bone = node as Bone;
-
-            //const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
-            const label = new Label( "Bone", font, new Color( 0xffffff ) );
-            label.projected = true;
-            label.scale.set( 0.3, 0.3, 0.3 );
-            label.attachTo( bone );
-            //label.rotateX( Math.PI );
-            //bone.add( label );
-          }
+            bones.push( bone );
+            ;
+          };
+        } );
+        bones!.forEach( ( bone, index ) => {
+          const label = new Label( `Bone ${ index }`, font, new Color( 0xffffff ) );
+          label.projected = true;
+          label.scale.set( 0.05, 0.05, 0.05 );
+          label.attachTo( bone );
+          //label.rotateX( Math.PI );
+          //bone.add( label )
         } );
 
         scene.add( trike );
