@@ -182,12 +182,10 @@ class Label extends Mesh {
   public setGlobalRotation( targetRotation: Quaternion ) {
     const parentQuaternion = new Quaternion();
     this.parent?.getWorldQuaternion( parentQuaternion );
-    console.log( parentQuaternion );
 
-    //rotation needed to get from q1 (new world) to q2 (old world)
+    //rotation needed to get from q1 (parent) to q2 (target)
     // q2 = r * q1
     // q2 * q1.inv = r
-
     const rotation = parentQuaternion.invert();
     rotation.multiply( targetRotation );
     this.setRotationFromQuaternion( rotation );

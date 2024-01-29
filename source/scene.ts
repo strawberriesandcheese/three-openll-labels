@@ -5,8 +5,6 @@ import {
   AnimationMixer,
   AxesHelper,
   Bone,
-  BoxGeometry,
-  Clock,
   Color,
   EquirectangularReflectionMapping,
   GridHelper,
@@ -21,16 +19,18 @@ import {
   PlaneGeometry,
   PointLight,
   PointLightHelper,
+  RepeatWrapping,
   SRGBColorSpace,
   Scene,
   SkinnedMesh,
   TextureLoader,
+  Vector2,
+  Vector3,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
-import * as animations from './helpers/animations';
 import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -39,7 +39,7 @@ import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 import './style.css';
 
-import { Label } from './Label';
+import { Label } from './label';
 import { FontFace } from './FontFace';
 import { FontFaceLoader } from './FontFaceLoader';
 
@@ -49,7 +49,6 @@ let scene: Scene;
 let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
-let cube: Mesh;
 let trike: Group;
 let trikeAnimations: AnimationClip[];
 let trikeBones: Bone[];
@@ -60,14 +59,12 @@ let cameraControls: OrbitControls;
 let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
-let clock: Clock;
 let stats: Stats;
 let gui: GUI;
 let font: FontFace;
 
 let lastFrame: number;
 
-const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
 let trikeBoneAnnotations = { enabled: true, scale: 0.05 };
@@ -75,8 +72,6 @@ let trikeBoneAnnotations = { enabled: true, scale: 0.05 };
 init();
 animate( 0 );
 
-addControls();
-addGui();
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -89,6 +84,7 @@ function init() {
     renderer.outputColorSpace = SRGBColorSpace;
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
+    gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 100 );
     cameraControls = new OrbitControls( camera, canvas );
   }
@@ -115,8 +111,8 @@ function init() {
   // ===== 💡 LIGHTS =====
   {
     ambientLight = new AmbientLight( 'white', 0.4 );
-    pointLight = new PointLight( '#ffdca8', 20, 100 );
-    pointLight.position.set( -2, 3, 3 );
+    pointLight = new PointLight( '#ffdca8', 80, 100 );
+    pointLight.position.set( 3, 10, 5 );
     pointLight.castShadow = true;
     pointLight.shadow.radius = 15;
     pointLight.shadow.camera.near = 0.5;
@@ -127,46 +123,89 @@ function init() {
     scene.add( pointLight );
   }
 
-  // ===== 📦 CUBE AND PLANE =====
+  // ===== 🌱 PLANE =====
   {
     const loader = new TextureLoader( loadingManager );
     const exrLoader = new EXRLoader( loadingManager );
-    const floorColorTexture = loader.load( 'rock_pitted_mossy_diff_1k.jpg' );
-    const floorDispTexture = loader.load( 'rock_pitted_mossy_disp_1k.png' );
-    const floorNormalTexture = exrLoader.load( 'rock_pitted_mossy_nor_gl_1k.exr' );
-    const floorRoughTexture = exrLoader.load( 'rock_pitted_mossy_rough_1k.exr' );
-    const sideLength = 1;
-    const cubeGeometry = new BoxGeometry( sideLength, sideLength, sideLength );
-    const cubeMaterial = new MeshStandardMaterial( {
-      color: '#f69f1f',
-      metalness: 0.5,
-      roughness: 0.7,
-    } );
-    cube = new Mesh( cubeGeometry, cubeMaterial );
-    cube.castShadow = true;
-    cube.position.y = 0.5;
+    const repeatVector = new Vector2( 10, 10 );
 
-    const planeGeometry = new PlaneGeometry( 10, 10 );
+    const floorColorTexture = loader.load( 'rock_pitted_mossy_diff_1k.jpg' );
+    floorColorTexture.repeat = repeatVector;
+    floorColorTexture.wrapS = RepeatWrapping;
+    floorColorTexture.wrapT = floorColorTexture.wrapS;
+
+    const floorDispTexture = loader.load( 'rock_pitted_mossy_disp_1k.png' );
+    floorDispTexture.repeat = repeatVector;
+    floorDispTexture.wrapS = floorColorTexture.wrapS;
+    floorDispTexture.wrapT = floorColorTexture.wrapS;
+
+    const floorNormalTexture = exrLoader.load( 'rock_pitted_mossy_nor_gl_1k.exr' );
+    floorNormalTexture.repeat = repeatVector;
+    floorNormalTexture.wrapS = floorColorTexture.wrapS;
+    floorNormalTexture.wrapT = floorColorTexture.wrapS;
+
+    const floorRoughTexture = exrLoader.load( 'rock_pitted_mossy_rough_1k.exr' );
+    floorRoughTexture.repeat = repeatVector;
+    floorRoughTexture.wrapS = floorColorTexture.wrapS;
+    floorRoughTexture.wrapT = floorColorTexture.wrapS;
+
+    const planeGeometry = new PlaneGeometry( 100, 100 );
     const planeMaterial = new MeshStandardMaterial( {
       map: floorColorTexture,
       displacementMap: floorDispTexture,
       normalMap: floorNormalTexture,
       roughnessMap: floorRoughTexture,
-      //color: 'gray',
-      //emissive: 'teal',
-      //emissiveIntensity: 0.2,
       side: 2,
-      //transparent: true,
-      //opacity: 0.9,
     } );
     plane = new Mesh( planeGeometry, planeMaterial );
     plane.rotateX( -Math.PI / 2 );
     plane.position.setY( -0.47 );
     plane.receiveShadow = true;
 
-    //scene.add(cube)
     scene.add( plane );
   }
+
+  // ===== 🌴 PLANTS =====
+  {
+    const loader = new GLTFLoader( loadingManager );
+    loader.load(
+      'fern_grass_02.glb',
+      ( gltf ) => {
+        const fern = gltf.scene;
+        fern.traverse( ( node ) => {
+          if ( node.type === 'Mesh' ) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        } );
+        fern.scale.set( 50, 50, 50 );
+        fern.translateX( -4 );
+        fern.translateY( 0.3 );
+        fern.translateZ( 2 );
+        scene.add( fern );
+      }
+    );
+    loader.load(
+      'palms.glb',
+      ( gltf ) => {
+        const palms = gltf.scene;
+        palms.traverse( ( node ) => {
+          if ( node.type === 'Mesh' ) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        } );
+        const palmScale = 0.02;
+        palms.scale.set( palmScale, palmScale, palmScale );
+        palms.translateX( 1.6 );
+        //palms.translateY( 0.3 );
+        palms.translateZ( -5 );
+        palms.rotateY( - Math.PI / 3 );
+        scene.add( palms );
+      }
+    );
+  }
+
   // ===== 🆎 FONT =====
   {
     font = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
@@ -212,9 +251,8 @@ function init() {
     scene.add( gridHelper );
   }
 
-  // ===== 📈 STATS & CLOCK =====
+  // ===== 📈 STATS =====
   {
-    clock = new Clock();
     stats = new Stats();
     document.body.appendChild( stats.dom );
   }
@@ -248,13 +286,14 @@ function init() {
             ;
           };
         } );
+
+        // now we create a label for every animation bone
         trikeBones!.forEach( ( bone, index ) => {
-          const label = new Label( `Bone ${ index }`, font, new Color( 0xffffff ) );
+          const label = new Label( bone.name, font, new Color( 0xffffff ) );
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
           label.attachTo( bone );
-          //label.rotateX( Math.PI );
-          //bone.add( label )
+          label.translateGlobal( new Vector3( 0.1, 0, 0 ) );
         } );
 
         scene.add( trike );
@@ -271,7 +310,9 @@ function init() {
 
         trike.position.y = 0.8;
 
-        addTrikeGui();
+        addControls();
+        addGui();
+
       },
       undefined,
       function ( error ) {
@@ -281,7 +322,7 @@ function init() {
 }
 
 function addControls() {
-  cameraControls.target = cube.position.clone();
+  cameraControls.target = trike.position.clone();
   cameraControls.enableDamping = true;
   cameraControls.autoRotate = false;
   cameraControls.maxDistance = 20;
@@ -289,7 +330,7 @@ function addControls() {
   cameraControls.maxPolarAngle = 1.5;
   cameraControls.update();
 
-  dragControls = new DragControls( [ cube ], camera, renderer.domElement );
+  dragControls = new DragControls( [ trike ], camera, renderer.domElement );
   //dragControls.transformGroup = true
   dragControls.addEventListener( 'hoveron', ( event ) => {
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'orange' );
@@ -299,14 +340,14 @@ function addControls() {
   } );
   dragControls.addEventListener( 'dragstart', ( event ) => {
     cameraControls.enabled = false;
-    animation.play = false;
+    trikeAnimationSettings.play = false;
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 0.7;
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
   } );
   dragControls.addEventListener( 'dragend', ( event ) => {
     cameraControls.enabled = true;
-    animation.play = true;
+    trikeAnimationSettings.play = true;
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 1;
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
@@ -323,24 +364,6 @@ function addControls() {
 
 function addGui() {
   gui.addFolder( 'Triceratops' );
-  /*
-    const cubeOneFolder = gui.addFolder('Cube one')
-
-    cubeOneFolder.add(cube.position, 'x').min(-5).max(5).step(0.1).name('pos x')
-    cubeOneFolder.add(cube.position, 'y').min(-5).max(5).step(0.1).name('pos y')
-    cubeOneFolder.add(cube.position, 'z').min(-5).max(5).step(0.1).name('pos z')
-
-    cubeOneFolder.add(cube.material, 'wireframe')
-    cubeOneFolder.addColor(cube.material, 'color')
-    cubeOneFolder.add(cube.material, 'metalness', 0, 1, 0.1)
-    cubeOneFolder.add(cube.material, 'roughness', 0, 1, 0.1)
-
-    cubeOneFolder.add(cube.rotation, 'x', -Math.PI * 2, Math.PI * 2, Math.PI / 4).name('rotate x')
-    cubeOneFolder.add(cube.rotation, 'y', -Math.PI * 2, Math.PI * 2, Math.PI / 4).name('rotate y')
-    cubeOneFolder.add(cube.rotation, 'z', -Math.PI * 2, Math.PI * 2, Math.PI / 4).name('rotate z')
-
-    cubeOneFolder.add(animation, 'enabled').name('animated')
-    */
 
   const controlsFolder = gui.addFolder( 'Controls' );
   controlsFolder.add( dragControls, 'enabled' ).name( 'drag controls' );
@@ -371,8 +394,26 @@ function addGui() {
     localStorage.removeItem( 'guiState' );
     gui.reset();
   };
-  gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );
 
+  // open modal with sources
+  const showSources = () => {
+    const dialog = document.querySelector( 'dialog' );
+    if ( dialog ) {
+      dialog.showModal();
+      const cancelButton = document.querySelector( "button[name='close']" );
+      if ( cancelButton ) {
+        cancelButton.addEventListener( "click", () => {
+          dialog.close();
+        } );
+      }
+    }
+  };
+
+
+
+  gui.add( { showSources }, 'showSources' ).name( 'Show Resource Attributions' );
+  gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );
+  addTrikeGui();
   gui.close();
 }
 
@@ -395,7 +436,7 @@ function addTrikeGui() {
 function changeTrikeAnimation( id: string ) {
   if ( trike ) {
     mixer.stopAllAction();
-    const clip = AnimationClip.findByName( trikeAnimations, trikeAnimationSettings.animation );
+    const clip = AnimationClip.findByName( trikeAnimations, id );
     const action = mixer.clipAction( clip );
     if ( trikeAnimationSettings.play )
       action.play();
@@ -450,15 +491,11 @@ function animate( timeStamp: number ) {
 
   cameraControls.update();
 
-  if ( animation.enabled && animation.play ) {
-    animations.rotate( cube, clock, Math.PI / 3 );
-    animations.bounce( cube, clock, 1, 0.5, 0.5 );
-  }
-
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 
   renderer.render( scene, camera );
+
 }
