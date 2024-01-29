@@ -7,11 +7,13 @@ import {
   InstancedBufferGeometry,
   Mesh,
   Object3D,
+  Quaternion,
   Renderer,
   Scene,
   ShaderMaterial,
   Texture,
   TypedArray,
+  Vector3,
 } from 'three';
 
 import { FontFace } from './FontFace';
@@ -172,8 +174,36 @@ class Label extends Mesh {
   }
 
   attachTo( object: Object3D ) {
+    const ogRotation = this.getWorldQuaternion( new Quaternion() );
     object.add( this );
+    this.setGlobalRotation( ogRotation );
   }
+
+  public setGlobalRotation( targetRotation: Quaternion ) {
+    const parentQuaternion = new Quaternion();
+    this.parent?.getWorldQuaternion( parentQuaternion );
+    console.log( parentQuaternion );
+
+    //rotation needed to get from q1 (new world) to q2 (old world)
+    // q2 = r * q1
+    // q2 * q1.inv = r
+
+    const rotation = parentQuaternion.invert();
+    rotation.multiply( targetRotation );
+    this.setRotationFromQuaternion( rotation );
+  };
+
+  public translateGlobal( vec: Vector3 ) {
+    if ( !this.parent ) {
+      this.position.add( vec );
+      return;
+    };
+
+    const origin = this.parent.worldToLocal( new Vector3( 0, 0, 0 ) );
+    const to = this.parent.worldToLocal( vec );
+    this.position.add( to.sub( origin ) );
+  }
+
   get fontFace(): FontFace {
     return this._fontFace;
   }
@@ -264,6 +294,7 @@ class Label extends Mesh {
   }
   set scalingFactor( scalingFactor: number ) {
     this._scalingFactor = scalingFactor;
+    this._needsLayout = true;
   }
 
   get projected(): boolean {
