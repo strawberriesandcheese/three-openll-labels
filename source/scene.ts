@@ -10,6 +10,7 @@ import {
   EquirectangularReflectionMapping,
   GridHelper,
   Group,
+  LinearSRGBColorSpace,
   LoadingManager,
   Mesh,
   MeshLambertMaterial,
@@ -21,7 +22,8 @@ import {
   PointLightHelper,
   SRGBColorSpace,
   Scene,
-  Vector3,
+  SkinnedMesh,
+  TextureLoader,
   WebGLRenderer,
 } from 'three';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
@@ -32,6 +34,7 @@ import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 import './style.css';
 //import { Canvas, Wizard } from 'webgl-operate';
@@ -121,10 +124,10 @@ function init() {
   // ===== 💡 LIGHTS =====
   {
     ambientLight = new AmbientLight( 'white', 0.4 );
-    pointLight = new PointLight( '#ffdca8', 1.2, 100 );
+    pointLight = new PointLight( '#ffdca8', 20, 100 );
     pointLight.position.set( -2, 3, 3 );
     pointLight.castShadow = true;
-    pointLight.shadow.radius = 4;
+    pointLight.shadow.radius = 15;
     pointLight.shadow.camera.near = 0.5;
     pointLight.shadow.camera.far = 4000;
     pointLight.shadow.mapSize.width = 2048;
@@ -135,7 +138,12 @@ function init() {
 
   // ===== 📦 CUBE AND PLANE =====
   {
-
+    const loader = new TextureLoader( loadingManager );
+    const exrLoader = new EXRLoader( loadingManager );
+    const floorColorTexture = loader.load( 'rock_pitted_mossy_diff_1k.jpg' );
+    const floorDispTexture = loader.load( 'rock_pitted_mossy_disp_1k.png' );
+    const floorNormalTexture = exrLoader.load( 'rock_pitted_mossy_nor_gl_1k.exr' );
+    const floorRoughTexture = exrLoader.load( 'rock_pitted_mossy_rough_1k.exr' );
     const sideLength = 1;
     const cubeGeometry = new BoxGeometry( sideLength, sideLength, sideLength );
     const cubeMaterial = new MeshStandardMaterial( {
@@ -147,17 +155,22 @@ function init() {
     cube.castShadow = true;
     cube.position.y = 0.5;
 
-    const planeGeometry = new PlaneGeometry( 1000, 1000 );
-    const planeMaterial = new MeshLambertMaterial( {
-      color: 'gray',
-      emissive: 'teal',
-      emissiveIntensity: 0.2,
+    const planeGeometry = new PlaneGeometry( 10, 10 );
+    const planeMaterial = new MeshStandardMaterial( {
+      map: floorColorTexture,
+      displacementMap: floorDispTexture,
+      normalMap: floorNormalTexture,
+      roughnessMap: floorRoughTexture,
+      //color: 'gray',
+      //emissive: 'teal',
+      //emissiveIntensity: 0.2,
       side: 2,
-      //transparent: false,
-      //opacity: 0.4,
+      //transparent: true,
+      //opacity: 0.9,
     } );
     const plane = new Mesh( planeGeometry, planeMaterial );
     plane.rotateX( Math.PI / 2 );
+    plane.position.setY( 0.45 );
     plane.receiveShadow = true;
 
     //scene.add(cube)
@@ -186,7 +199,7 @@ function init() {
   {
     const loader = new RGBELoader( loadingManager );
     loader.load(
-      'dresden_station_night_4k.hdr',
+      'rustig_koppie_puresky_4k.hdr',
       ( texture ) => {
         texture.mapping = EquirectangularReflectionMapping;
         scene.background = texture;
@@ -223,10 +236,20 @@ function init() {
       '/animated_triceratops_skeleton.glb',
       function ( gltf ) {
         trike = gltf.scene;
+        console.log( trike );
         trike.traverse( ( node ) => {
-          if ( node.type === 'Mesh' ) {
-            node.castShadow = true;
-            node.receiveShadow = true;
+          //console.log( node );
+          if ( node.type === 'SkinnedMesh' ) {
+            const mesh = node as SkinnedMesh;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+
+            const material = mesh.material as MeshStandardMaterial;
+            material.map!.colorSpace = LinearSRGBColorSpace;
+            material.aoMap!.colorSpace = LinearSRGBColorSpace;
+            material.metalnessMap!.colorSpace = LinearSRGBColorSpace;
+            material.normalMap!.colorSpace = LinearSRGBColorSpace;
+            material.roughnessMap!.colorSpace = LinearSRGBColorSpace;
           }
         } );
 

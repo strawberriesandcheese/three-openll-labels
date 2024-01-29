@@ -8,7 +8,6 @@ import {
   ShaderMaterial,
   Texture,
   TypedArray,
-  Vector3,
 } from 'three';
 
 import { FontFace } from './FontFace';
@@ -16,6 +15,7 @@ import { FontFace } from './FontFace';
 import vertexShader from './shaders/font.vert?raw';
 import fragmentShader from './shaders/font.frag?raw';
 import { Glyph } from './Glyph';
+import { Typesetter } from './Typesetter';
 
 class Label extends Mesh {
 
@@ -112,10 +112,12 @@ class Label extends Mesh {
   }
 
   layout() {
-    this.updateTexCoords();
-    this.updateTangents();
-    this.updateUps();
-    this.updateOrigins();
+    const typesetResults = Typesetter.typeset( this );
+    this.origins = typesetResults.origins;
+    this.tangents = typesetResults.tangents;
+    this.ups = typesetResults.ups;
+    this.texCoords = typesetResults.texCoords;
+
     this.setupGeometry();
     this._needsLayout = false;
   }
@@ -139,64 +141,9 @@ class Label extends Mesh {
     this._geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
   }
 
-  updateOrigins() {
-    let pen = new Vector3().copy( this.position );
-
-    const origins = new Float32Array( this.length * 3 );
-
-    for ( let i = 0; i < this._geometry.instanceCount; i++ ) {
-      const glyph = this.textGlyphs[ i ];
-
-      origins[ 3 * i + 0 ] = pen.x + ( glyph.bearing.x - this.fontFace.glyphTexturePadding.left ) * this._scalingFactor;
-      origins[ 3 * i + 1 ] = pen.y + ( glyph.bearing.y - glyph.extent.y ) * this._scalingFactor;
-      origins[ 3 * i + 2 ] = pen.z;
-
-      pen.x = pen.x + glyph.advance * this._scalingFactor;
-
-      if ( i < this._geometry.instanceCount - 1 ) {
-        const nextGlyph = this.textGlyphs[ i + 1 ];
-        pen.x = pen.x + ( glyph.kerning( nextGlyph.index ) ) * this._scalingFactor;
-      }
-    }
-
-    this.origins = origins;
-  }
-
-  updateTangents() {
-    const tangents = new Float32Array( this.length * 3 );
-    for ( let i = 0; i < this._geometry.instanceCount; i++ ) {
-      const glyph = this.textGlyphs[ i ];
-      tangents[ 3 * i + 0 ] = glyph.extent.width * this._scalingFactor;
-      tangents[ 3 * i + 1 ] = 0;
-      tangents[ 3 * i + 2 ] = 0;
-    }
-    this.tangents = tangents;
-  }
-
-  updateUps() {
-    const ups = new Float32Array( this.length * 3 );
-    for ( let i = 0; i < this._geometry.instanceCount; i++ ) {
-      const glyph = this.textGlyphs[ i ];
-      ups[ 3 * i + 0 ] = 0;
-      ups[ 3 * i + 1 ] = glyph.extent.height * this._scalingFactor;
-      ups[ 3 * i + 2 ] = 0;
-    }
-    this.ups = ups;
-  }
-
-  updateTexCoords() {
-    const texCoords = new Float32Array( this.length * 4 );
-    for ( let i = 0; i < this._geometry.instanceCount; i++ ) {
-      const glyph = this.textGlyphs[ i ];
-      texCoords[ 4 * i + 0 ] = glyph.subTextureOrigin.x;
-      texCoords[ 4 * i + 1 ] = glyph.subTextureOrigin.y;
-      texCoords[ 4 * i + 2 ] = glyph.subTextureOrigin.x + glyph.subTextureExtent.x;
-      texCoords[ 4 * i + 3 ] = glyph.subTextureOrigin.y + glyph.subTextureExtent.y;
-    }
-    this.texCoords = texCoords;
-  }
-
   updateColor() {
+    if ( !this.material )
+      return;
     this.material.uniforms.color.value = this.color;
     // following line might not be necessary
     this.material.uniforms.color.value.needsUpdate = true;
@@ -234,7 +181,7 @@ class Label extends Mesh {
     return this._text;
   }
 
-  private get textGlyphs(): Array<Glyph> {
+  get textGlyphs(): Array<Glyph> {
     return this._textGlyphs;
   }
   private set textGlyphs( glyphArray: Array<Glyph> ) {
@@ -245,6 +192,10 @@ class Label extends Mesh {
     return this._origins;
   }
   private set origins( origins: Float32Array ) {
+    if ( origins.length < this.length * 3 ) {
+      console.error( `Expected array of size ${ this.length * 3 }, got an array of size ${ origins.length }` );
+      return;
+    }
     this._origins = origins;
   }
 
@@ -252,6 +203,10 @@ class Label extends Mesh {
     return this._tangents;
   }
   private set tangents( tangents: Float32Array ) {
+    if ( tangents.length < this.length * 3 ) {
+      console.error( `Expected array of size ${ this.length * 3 }, got an array of size ${ tangents.length }` );
+      return;
+    }
     this._tangents = tangents;
   }
 
@@ -259,6 +214,10 @@ class Label extends Mesh {
     return this._ups;
   }
   private set ups( ups: Float32Array ) {
+    if ( ups.length < this.length * 3 ) {
+      console.error( `Expected array of size ${ this.length * 3 }, got an array of size ${ ups.length }` );
+      return;
+    }
     this._ups = ups;
   }
 
@@ -266,6 +225,10 @@ class Label extends Mesh {
     return this._tangents;
   }
   private set texCoords( texCoords: Float32Array ) {
+    if ( texCoords.length < this.length * 4 ) {
+      console.error( `Expected array of size ${ this.length * 4 }, got an array of size ${ texCoords.length }` );
+      return;
+    }
     this._texCoords = texCoords;
   }
 
@@ -282,6 +245,14 @@ class Label extends Mesh {
   set color( color: Color ) {
     this._color = color;
     this.updateColor();
+  }
+
+  get scalingFactor(): number {
+    return this._scalingFactor;
+  }
+
+  set scalingFactor( scalingFactor: number ) {
+    this._scalingFactor = scalingFactor;
   }
 
 }
