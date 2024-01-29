@@ -1,10 +1,14 @@
 import {
   BufferAttribute,
+  Camera,
   Color,
   DoubleSide,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Mesh,
+  Object3D,
+  Renderer,
+  Scene,
   ShaderMaterial,
   Texture,
   TypedArray,
@@ -28,6 +32,8 @@ class Label extends Mesh {
   protected _textChanged = false;
   protected _color = new Color( 0x000000 );
   protected _text: string;
+
+  protected _alwaysFaceCamera: boolean;
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -76,7 +82,7 @@ class Label extends Mesh {
   }
 
   // we need to make sure we have an actual font face ready before starting to work with it
-  onBeforeRender() {
+  onBeforeRender( renderer: Renderer, scene: Scene, camera: Camera ) {
     if ( this._textChanged && this.fontFace.ready ) {
       this.updateText();
       this._needsLayout = true;
@@ -90,9 +96,12 @@ class Label extends Mesh {
       this._scalingFactor = 1 / this.fontFace.size;
     }
 
-    if ( this._needsLayout /*&& this.fontFace.ready*/ ) {
+    if ( this._needsLayout ) {
       this.layout();
     }
+
+    if ( this.projected )
+      this.lookAt( camera.position );
   }
 
   private updateText() {
@@ -162,6 +171,9 @@ class Label extends Mesh {
     } ) );
   }
 
+  attachTo( object: Object3D ) {
+    object.add( this );
+  }
   get fontFace(): FontFace {
     return this._fontFace;
   }
@@ -250,9 +262,15 @@ class Label extends Mesh {
   get scalingFactor(): number {
     return this._scalingFactor;
   }
-
   set scalingFactor( scalingFactor: number ) {
     this._scalingFactor = scalingFactor;
+  }
+
+  get projected(): boolean {
+    return this._alwaysFaceCamera;
+  }
+  set projected( projected: boolean ) {
+    this._alwaysFaceCamera = projected;
   }
 
 }

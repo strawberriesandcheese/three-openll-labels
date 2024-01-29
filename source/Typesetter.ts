@@ -14,8 +14,6 @@ class Typesetter {
     const ups = this.calculateUps( label );
     const texCoords = this.calculateTexCoords( label );
 
-
-
     return { origins, tangents, ups, texCoords };
   }
 

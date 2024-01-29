@@ -4,6 +4,7 @@ import {
   AnimationClip,
   AnimationMixer,
   AxesHelper,
+  Bone,
   BoxGeometry,
   Clock,
   Color,
@@ -37,17 +38,12 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 import './style.css';
-//import { Canvas, Wizard } from 'webgl-operate';
-//import { Label3DRenderer, LabelAnchorRenderer, LabelElideRenderer } from './renderer';
 
 import { Label } from './Label';
+import { FontFace } from './FontFace';
 import { FontFaceLoader } from './FontFaceLoader';
 
-const CANVAS_ID_THREE = 'three';
-const CANVAS_ID_OPERATE = 'operate';
-
-let threeCanvas: HTMLCanvasElement;
-let operateCanvas: HTMLCanvasElement;
+let canvas: HTMLCanvasElement;
 let renderer: WebGLRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
@@ -56,6 +52,7 @@ let pointLight: PointLight;
 let cube: Mesh;
 let trike: Group;
 let trikeAnimations: AnimationClip[];
+let plane: Mesh;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: OrbitControls;
@@ -65,6 +62,7 @@ let pointLightHelper: PointLightHelper;
 let clock: Clock;
 let stats: Stats;
 let gui: GUI;
+let font: FontFace;
 
 let lastFrame: number;
 
@@ -72,34 +70,25 @@ const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
 
-setupCanvasses();
-
-//initOperate();
-
 init();
 animate( 0 );
 
 addControls();
 addGui();
 
-function setupCanvasses() {
-  threeCanvas = document.querySelector( `canvas#${ CANVAS_ID_THREE }` )!;
-  //operateCanvas = document.querySelector( `canvas#${ CANVAS_ID_OPERATE }` )!;
-}
-
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
-    //threeCanvas = document.querySelector( `canvas#${ CANVAS_ID }` )!;
-    renderer = new WebGLRenderer( { canvas: threeCanvas, antialias: true, alpha: true } );
+    canvas = document.querySelector( `canvas` )!;
+    renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
-    camera = new PerspectiveCamera( 50, threeCanvas.clientWidth / threeCanvas.clientHeight, 0.1, 100 );
-    cameraControls = new OrbitControls( camera, threeCanvas );
+    camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 100 );
+    cameraControls = new OrbitControls( camera, canvas );
   }
 
   // ===== 👨🏻‍💼 LOADING MANAGER =====
@@ -168,9 +157,9 @@ function init() {
       //transparent: true,
       //opacity: 0.9,
     } );
-    const plane = new Mesh( planeGeometry, planeMaterial );
-    plane.rotateX( Math.PI / 2 );
-    plane.position.setY( 0.45 );
+    plane = new Mesh( planeGeometry, planeMaterial );
+    plane.rotateX( -Math.PI / 2 );
+    plane.position.setY( -0.47 );
     plane.receiveShadow = true;
 
     //scene.add(cube)
@@ -178,16 +167,16 @@ function init() {
   }
   // ===== 🆎 FONT =====
   {
-    const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
-    const label = new Label( "No", fontface, new Color( 0x000000 ) );
+    font = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
+    const label = new Label( "No", font, new Color( 0x000000 ) );
     setTimeout( () => {
       label.text = label.text = "Yes";
       label.color = new Color( 0xffffff );
-    }, 1000 );
+    }, 2000 );
     label.scale.set( 0.5, 0.5, 0.5 );
-    label.position.set( 0.5, 1, 0 );
-
+    label.rotateX( -Math.PI / 2 );
     scene.add( label );
+    label.position.setX( -5 );
   }
 
   // ===== 🎥 CAMERA =====
@@ -236,7 +225,6 @@ function init() {
       '/animated_triceratops_skeleton.glb',
       function ( gltf ) {
         trike = gltf.scene;
-        console.log( trike );
         trike.traverse( ( node ) => {
           //console.log( node );
           if ( node.type === 'SkinnedMesh' ) {
@@ -250,6 +238,17 @@ function init() {
             material.metalnessMap!.colorSpace = LinearSRGBColorSpace;
             material.normalMap!.colorSpace = LinearSRGBColorSpace;
             material.roughnessMap!.colorSpace = LinearSRGBColorSpace;
+          }
+          if ( node.type === 'Bone' ) {
+            const bone = node as Bone;
+
+            //const fontface = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
+            const label = new Label( "Bone", font, new Color( 0xffffff ) );
+            label.projected = true;
+            label.scale.set( 0.3, 0.3, 0.3 );
+            label.attachTo( bone );
+            //label.rotateX( Math.PI );
+            //bone.add( label );
           }
         } );
 
@@ -311,8 +310,8 @@ function addControls() {
 
   // Full screen
   window.addEventListener( 'dblclick', ( event ) => {
-    if ( event.target === threeCanvas ) {
-      toggleFullScreen( threeCanvas );
+    if ( event.target === canvas ) {
+      toggleFullScreen( canvas );
     }
   } );
 }
@@ -427,7 +426,6 @@ function animate( timeStamp: number ) {
   }
 
   if ( resizeRendererToDisplaySize( renderer ) ) {
-    const canvas = threeCanvas;
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
