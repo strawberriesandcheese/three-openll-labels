@@ -52,6 +52,7 @@ let pointLight: PointLight;
 let cube: Mesh;
 let trike: Group;
 let trikeAnimations: AnimationClip[];
+let trikeBones: Bone[];
 let plane: Mesh;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
@@ -69,6 +70,7 @@ let lastFrame: number;
 const animation = { enabled: false, play: true };
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
+let trikeBoneAnnotations = { enabled: true, scale: 0.05 };
 
 init();
 animate( 0 );
@@ -225,7 +227,7 @@ function init() {
       '/animated_triceratops_skeleton.glb',
       ( gltf ) => {
         trike = gltf.scene;
-        let bones: Bone[] = new Array<Bone>;
+        trikeBones = new Array<Bone>;
         trike.traverse( ( node ) => {
           if ( node.type === 'SkinnedMesh' ) {
             const mesh = node as SkinnedMesh;
@@ -242,14 +244,14 @@ function init() {
           if ( node.type === 'Bone' ) {
             // it is discouraged to change the scene tree in the traverse callback, so we just save all bones
             const bone = node as Bone;
-            bones.push( bone );
+            trikeBones.push( bone );
             ;
           };
         } );
-        bones!.forEach( ( bone, index ) => {
+        trikeBones!.forEach( ( bone, index ) => {
           const label = new Label( `Bone ${ index }`, font, new Color( 0xffffff ) );
           label.projected = true;
-          label.scale.set( 0.05, 0.05, 0.05 );
+          label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
           label.attachTo( bone );
           //label.rotateX( Math.PI );
           //bone.add( label )
@@ -386,6 +388,8 @@ function addTrikeGui() {
 
   trikeFolder.add( trikeAnimationSettings, 'play' ).name( 'animated' ).onChange( () => toggleTrikeAnimation() );
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
+  trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
+  trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
 }
 
 function changeTrikeAnimation( id: string ) {
@@ -393,7 +397,8 @@ function changeTrikeAnimation( id: string ) {
     mixer.stopAllAction();
     const clip = AnimationClip.findByName( trikeAnimations, trikeAnimationSettings.animation );
     const action = mixer.clipAction( clip );
-    action.play();
+    if ( trikeAnimationSettings.play )
+      action.play();
   }
 }
 
@@ -406,6 +411,28 @@ function toggleTrikeAnimation() {
     } else {
       mixer.stopAllAction();
     }
+  }
+}
+
+function toggleTrikeBoneAnnotations( value: boolean ) {
+  if ( trike ) {
+    trikeBones.forEach( bone => {
+      bone.children.forEach( ( child ) => {
+        if ( child instanceof Label )
+          child.visible = value;
+      } );
+    } );
+  }
+}
+
+function changeTrikeBoneAnnotationsSize( value: number ) {
+  if ( trike ) {
+    trikeBones.forEach( bone => {
+      bone.children.forEach( ( child ) => {
+        if ( child instanceof Label )
+          child.scale.set( value, value, value );
+      } );
+    } );
   }
 }
 
