@@ -164,14 +164,14 @@ class FontFaceLoader extends Loader {
       return false;
     }
 
-    const index: number = parseInt( pairs.get( 'id' )!, 10 );
-    if ( index <= 0.0 ) {
-      console.warn( `Expected glyph index to be greater than 0, given ${ index }` );
+    const codepoint: number = parseInt( pairs.get( 'id' )!, 10 );
+    if ( codepoint <= 0.0 ) {
+      console.warn( `Expected glyph index to be greater than 0, given ${ codepoint }` );
       return false;
     }
 
     const glyph = new Glyph();
-    glyph.index = index;
+    glyph.codepoint = codepoint;
 
     const extentScale: Vector2 = new Vector2(
       1.0 / fontFace.glyphTextureExtent.x,

@@ -23,7 +23,10 @@ import fragmentShader from './shaders/font.frag?raw';
 import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
 
+
 class Label extends Mesh {
+
+  static readonly DEFAULT_LINE_FEED = '\x0A';
 
   _geometry: InstancedBufferGeometry;
   declare public material: ShaderMaterial;
@@ -35,7 +38,14 @@ class Label extends Mesh {
   protected _color = new Color( 0x000000 );
   protected _text: string;
 
-  protected _alwaysFaceCamera: boolean;
+  protected _alwaysFaceCamera = false;
+  protected _lineAnchor = Label.LineAnchor.Baseline;
+  protected _fontSize = 1;
+  protected _lineWidth = 100;
+  protected _lineFeed = Label.DEFAULT_LINE_FEED;
+  protected _wordWrap = false;
+  protected _alignment = Label.Alignment.Left;
+
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -60,12 +70,11 @@ class Label extends Mesh {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  private _scalingFactor = 1;
-
   constructor( text: string, fontFace: FontFace, color: Color ) {
     super();
 
     this.text = text;
+    this._lineAnchor;
 
     this._origins = new Float32Array( this.length * 3 );
     this._tangents = new Float32Array( this.length * 3 );
@@ -95,11 +104,12 @@ class Label extends Mesh {
       this._needsLayout = true;
       this._needsInitialLayout = false;
       this.material = this.createShaderMaterial( this.fontFace.glyphTexture, this._color );
-      this._scalingFactor = 1 / this.fontFace.size;
+      this._fontSize = 1 / this.fontFace.size;
     }
 
     if ( this._needsLayout ) {
       this.layout();
+      console.log( "resulting: ", this.texCoords );
     }
 
     if ( this.projected )
@@ -114,9 +124,9 @@ class Label extends Mesh {
   private updateTextGlyphs() {
     let glyphArray = new Array<Glyph>( this.text.length );
     for ( let i = 0; i < this.text.length; i++ ) {
-      const charIndex = this.text.codePointAt( i );
-      if ( charIndex ) {
-        glyphArray[ i ] = this._fontFace.glyph( charIndex );
+      const codepoint = this.text.codePointAt( i );
+      if ( codepoint ) {
+        glyphArray[ i ] = this._fontFace.glyph( codepoint );
       }
     }
     this.textGlyphs = glyphArray;
@@ -202,11 +212,27 @@ class Label extends Mesh {
     this.position.add( to.sub( origin ) );
   }
 
+  charAt( index: number ): string {
+    if ( index >= this.length ) {
+      console.error( `Expected index smaller than ${ length }, got index ${ index }` );
+      return '';
+    }
+
+    return this.textGlyphs[ index ].toChar();
+  }
+
+  lineFeedAt( index: number ): boolean {
+    return this.charAt( index ) === this.lineFeed;
+  }
+
   get fontFace(): FontFace {
     return this._fontFace;
   }
   set fontFace( fontFace: FontFace ) {
+    if ( this._fontFace === fontFace )
+      return;
     this._fontFace = fontFace;
+    this._needsInitialLayout = true;
   }
 
   get length(): number {
@@ -214,6 +240,8 @@ class Label extends Mesh {
   }
 
   set text( text: string ) {
+    if ( this._text === text )
+      return;
     this._text = text;
     this._textChanged = true;
   }
@@ -283,15 +311,19 @@ class Label extends Mesh {
     return this._color;
   }
   set color( color: Color ) {
+    if ( this._color === color )
+      return;
     this._color = color;
     this.updateColor();
   }
 
-  get scalingFactor(): number {
-    return this._scalingFactor;
+  get fontSize(): number {
+    return this._fontSize;
   }
-  set scalingFactor( scalingFactor: number ) {
-    this._scalingFactor = scalingFactor;
+  set fontSize( scalingFactor: number ) {
+    if ( this._fontSize === scalingFactor )
+      return;
+    this._fontSize = scalingFactor;
     this._needsLayout = true;
   }
 
@@ -302,6 +334,111 @@ class Label extends Mesh {
     this._alwaysFaceCamera = projected;
   }
 
+  get lineAnchor(): Label.LineAnchor {
+    return this._lineAnchor;
+  }
+  set lineAnchor( lineAnchor: Label.LineAnchor ) {
+    if ( this._lineAnchor === lineAnchor )
+      return;
+    this._lineAnchor = lineAnchor;
+    this._needsLayout = true;
+  }
+
+  get lineAnchorOffset(): number {
+    let offset = 0.0;
+    if ( !this.fontFace.ready )
+      return 0;
+    const fontFace = this.fontFace;
+    const padding = fontFace.glyphTexturePadding;
+
+    switch ( this.lineAnchor ) {
+      case Label.LineAnchor.Ascent:
+        offset = fontFace.ascent - padding.top;
+        break;
+      case Label.LineAnchor.Descent:
+        offset = fontFace.descent * ( 1.0 + padding.top / fontFace.ascent );
+        break;
+      case Label.LineAnchor.Center:
+        offset = fontFace.ascent - padding.top - 0.5 * fontFace.size;
+        break;
+      case Label.LineAnchor.Top:
+        offset = fontFace.ascent - padding.top + 0.5 * fontFace.lineGap;
+        break;
+      case Label.LineAnchor.Bottom:
+        offset = fontFace.ascent - padding.top + 0.5 * fontFace.lineGap - fontFace.lineHeight;
+        break;
+      case Label.LineAnchor.Baseline:
+      default:
+        offset = - padding.top;
+        break;
+    }
+    return offset;
+  }
+
+  get lineWidth(): number {
+    if ( !this.fontFace.ready )
+      return NaN;
+    return this._lineWidth * this._fontFace!.size / this.fontSize;
+  }
+  set lineWidth( lineWidth: number ) {
+    if ( this._lineWidth === lineWidth ) {
+      return;
+    }
+    this._lineWidth = lineWidth;
+    this._needsLayout;
+  }
+
+  get lineFeed(): string {
+    if ( this._lineFeed != '' ) {
+      return this._lineFeed;
+    }
+    return Label.DEFAULT_LINE_FEED;
+  }
+  set lineFeed( lineFeed: string ) {
+    if ( this._lineFeed === lineFeed )
+      return;
+    this._lineFeed = lineFeed;
+    this._needsLayout = true;
+  }
+
+  set wordWrap( flag: boolean ) {
+    if ( this._wordWrap === flag )
+      return;
+    this._wordWrap = flag;
+    this._needsLayout = true;
+  }
+  get wordWrap(): boolean {
+    return this._wordWrap;
+  }
+
+  get alignment(): Label.Alignment {
+    return this._alignment;
+  }
+  set alignment( alignment: Label.Alignment ) {
+    if ( this._alignment === alignment ) {
+      return;
+    }
+    this._alignment = alignment;
+    this._needsLayout = true;
+  }
+}
+
+namespace Label {
+
+  export enum Alignment {
+    Left = 'left',
+    Center = 'center',
+    Right = 'right',
+  }
+
+  export enum LineAnchor {
+    Top = 'top',
+    Ascent = 'ascent',
+    Center = 'center',
+    Baseline = 'baseline',
+    Descent = 'descent',
+    Bottom = 'bottom',
+  }
 }
 
 export { Label };

@@ -8,7 +8,7 @@ import { Vector2 } from "three";
  */
 class Glyph {
 
-  protected _index: number;
+  protected _codepoint: number;
   protected _advance: number;
   protected _bearing: Vector2 = new Vector2( 0, 0 );
   protected _extent: Vector2 = new Vector2( 0, 0 );
@@ -16,9 +16,13 @@ class Glyph {
   protected _subTextureOrigin: Vector2 = new Vector2( 0.0, 0.0 );
   protected _subTextureExtent: Vector2 = new Vector2( 0.0, 0.0 );
 
-  constructor( index: number = 0, advance: number = 0 ) {
-    this._index = index;
+  constructor( codepoint: number = 0, advance: number = 0 ) {
+    this._codepoint = codepoint;
     this._advance = advance;
+  }
+
+  toChar(): string {
+    return String.fromCodePoint( this.codepoint );
   }
 
   /**
@@ -35,12 +39,12 @@ class Glyph {
    * The glyph's kernel w.r.t. a subsequent glyph in pt. The kerning provides a(usually negative) offset along the
    * baseline that can be used to move the pen-position respectively, i.e., the subsequent pen-position is computed
    * as follows: pen-position + advance + kerning
-   * @param subsequentIndex - The subsequent glyph's index.
+   * @param subsequentCodepoint - The subsequent glyph's codepoint.
    * @returns - The kerning w.r.t. to the subsequent glyph in pt. If no kerning data is available for the subsequent
    * glyph, the return value is zero indicating no kerning.
    */
-  kerning( subsequentIndex: number ): number {
-    const kerning = this._kernings.get( subsequentIndex );
+  kerning( subsequentCodepoint: number ): number {
+    const kerning = this._kernings.get( subsequentCodepoint );
     if ( kerning !== undefined ) {
       return kerning;
     }
@@ -49,24 +53,24 @@ class Glyph {
 
   /**
    * Set the glyph's kernel w.r.t. a subsequent glyph in pt. @see {@link kerning}
-   * @param subsequentIndex - The subsequent glyph's index.
+   * @param subsequentCodepoint - The subsequent glyph's codepoint.
    * @param kerning - The kerning value w.r.t. to the subsequent glyph in pt. Note that the kerning should be a
    * negative value but is not enforced to be in terms of assertion or clamping. If kerning data for the subsequent
    * glyph is already available it will be updated to the provided value.
    */
-  setKerning( subsequentIndex: number, kerning: number ): void {
-    this._kernings.set( subsequentIndex, kerning );
+  setKerning( subsequentCodepoint: number, kerning: number ): void {
+    this._kernings.set( subsequentCodepoint, kerning );
   }
 
 
   /**
    * Set the index of one single distinguishable character.
    */
-  set index( index: number ) {
-    this._index = index;
+  set codepoint( codepoint: number ) {
+    this._codepoint = codepoint;
   }
-  get index(): number {
-    return this._index;
+  get codepoint(): number {
+    return this._codepoint;
   }
 
   /**

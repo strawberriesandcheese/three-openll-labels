@@ -24,27 +24,27 @@ class FontFace {
 
   /**
      * Check if a glyph of a specific index is available.
-     * @param index - Index of the glyph to access.
+     * @param codepoint - Index of the glyph to access.
      * @returns - True if a glyph for the provided index was added.
      */
-  hasGlyph( index: number ): boolean {
-    return !!this._glyphs.get( index );
+  hasGlyph( codepoint: number ): boolean {
+    return !!this._glyphs.get( codepoint );
   }
 
   /**
    * Direct access to an indexed glyph. If the glyph does not exist, an empty glyph is returned without adding it
    * to glyphs. The glyph atlas might be loaded asynchronously, thus, new glyphs are expected to be added via
    * addGlyph.
-   * @param index - Index of the glyph to access.
+   * @param codepoint - Index of the glyph to access.
    * @returns - Glyph with the matching index or an empty glyph, if index has not match
    */
-  glyph( index: number ): Glyph {
-    const existingGlyph = this._glyphs.get( index );
+  glyph( codepoint: number ): Glyph {
+    const existingGlyph = this._glyphs.get( codepoint );
     if ( existingGlyph ) {
       return existingGlyph;
     }
     const glyph = new Glyph();
-    glyph.index = index;
+    glyph.codepoint = codepoint;
     return glyph;
   }
 
@@ -53,11 +53,11 @@ class FontFace {
    * @param glyph - The glyph to add to the set of glyphs.
    */
   addGlyph( glyph: Glyph ): void {
-    if ( this.hasGlyph( glyph.index ) ) {
+    if ( this.hasGlyph( glyph.codepoint ) ) {
       console.error( 'Expected glyph to not already exist' );
       return;
     }
-    this._glyphs.set( glyph.index, glyph );
+    this._glyphs.set( glyph.codepoint, glyph );
   }
 
   /**
