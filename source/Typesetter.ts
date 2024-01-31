@@ -1,8 +1,7 @@
-import { Vector2, Vector3, Vector4 } from "three";
+import { Vector3, Vector4 } from "three";
 import { Label } from "./label";
 import { Glyph } from "./Glyph";
 import { FontFace } from "./FontFace";
-import { ReplaySubject } from "rxjs";
 
 type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float32Array, texCoords: Float32Array; };
 
@@ -16,21 +15,10 @@ class Typesetter {
   // stores line information for every glyph based on index (maybe only store start of line indices?)
   protected _glyphLine: number[];
 
-  static typeset( label: Label ): BufferArrays {
-
-    const origins = this.calculateOrigins( label );
-    const tangents = this.calculateTangents( label );
-    const ups = this.calculateUps( label );
-    const texCoords = this.calculateTexCoords( label );
-
-    texCoords;
-
-    // const result = { origins, tangents, ups, texCoords };
-
-    //const result = this.initArrays( label.length );
-    const result = this.typesetLabel( label );
-    // console.log( result.texCoords );
-    return result;
+  static typeset( label: Label, useMyWay: boolean ): BufferArrays {
+    if ( useMyWay )
+      return this.typesetMyWay( label );
+    return this.typesetLabel( label );
   }
 
   static initArrays( size: number ): BufferArrays {
@@ -38,6 +26,15 @@ class Typesetter {
     const tangents = new Float32Array( size * 3 ).fill( 0 );
     const ups = new Float32Array( size * 3 ).fill( 0 );
     const texCoords = new Float32Array( size * 4 ).fill( 0 );
+
+    return { origins, tangents, ups, texCoords };
+  }
+
+  static typesetMyWay( label: Label ): BufferArrays {
+    const origins = this.calculateOrigins( label );
+    const tangents = this.calculateTangents( label );
+    const ups = this.calculateUps( label );
+    const texCoords = this.calculateTexCoords( label );
 
     return { origins, tangents, ups, texCoords };
   }
@@ -50,15 +47,16 @@ class Typesetter {
         startGlyphIndex: number;
       };
 
-    // Get font face
+    // Get font face and label scaling factor
     const fontFace = label.fontFace;
+    const scalingFactor = label.scalingFactor;
 
     // Append vertex cloud: the maximum number of visible glyphs is the size of the string
     const result = this.initArrays( label.length );
 
     let glyphStart = 0;
 
-    const currentPen = new Vector3( 0, label.lineAnchorOffset );
+    const currentPen = new Vector3( 0, label.lineAnchorOffset * scalingFactor, 0 );
     const currentLine: SegmentInformation = {
       firstDepictablePen: currentPen,
       lastDepictablePen: currentPen,
@@ -70,14 +68,14 @@ class Typesetter {
       startGlyphIndex: glyphStart
     };
 
-    const lineWidth = Math.max( label.lineWidth * label.fontFace.size / label.fontSize, glyphStart );
+    const lineWidth = Math.max( label.lineWidth * scalingFactor, glyphStart );
 
     let firstDepictablePenInvalid = true;
     let index = glyphStart;
     for ( index; index < label.length; ) {
       const glyph = label.textGlyphs[ index ];
       let previousGlyph = new Glyph;
-      if ( index > 0 )
+      if ( index > currentLine.startGlyphIndex )
         previousGlyph = fontFace.glyph( index - 1 );
 
       if ( firstDepictablePenInvalid && glyph.depictable() ) {
@@ -99,7 +97,7 @@ class Typesetter {
         // extent.y += fontFace.lineHeight();
 
         const lineHeight = fontFace.lineHeight;
-        currentPen.y -= lineHeight;
+        currentPen.y -= lineHeight * scalingFactor;
 
         // Handle newline and alignment
         this.typeset_align( currentLine.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, lineForward.startGlyphIndex, result );
@@ -109,13 +107,13 @@ class Typesetter {
 
         for ( let j = lineForward.startGlyphIndex; j != index; ++j ) {
           // not sure if next line is necessary. discuss
-          result.origins[ 3 * j + Typesetter.Components.x ] -= xOffset;
-          result.origins[ 3 * j + Typesetter.Components.y ] -= lineHeight;
+          result.origins[ 3 * j + Typesetter.Components.x ] -= xOffset * scalingFactor;
+          result.origins[ 3 * j + Typesetter.Components.y ] -= lineHeight * scalingFactor;
           //result.origins[ j ].x -= xOffset;
           //v.origin.y -= lineHeight;
         }
 
-        currentPen.x = Math.max( lineForward.startGlyphIndex >= index ? 0 : currentPen.x - xOffset, 0 );
+        currentPen.x = Math.max( lineForward.startGlyphIndex >= index ? 0 : currentPen.x - xOffset, 0 ) * scalingFactor;
         currentLine.startGlyphIndex = lineForward.startGlyphIndex;
         lineForward.startGlyphIndex = index;
 
@@ -124,17 +122,17 @@ class Typesetter {
         lineForward.lastDepictablePen = currentPen;
       }
       else {   // Apply kerning if no line feed precedes
-        currentPen.x += kerning;
+        currentPen.x += kerning * scalingFactor;
       }
 
       // Typeset glyphs in vertex cloud (only if renderable)
       if ( glyph.depictable() ) {
         //vertices.push_back( GlyphVertexCloud:: Vertex() );
-        Typesetter.typeset_glyph( result, index, currentPen, glyph, fontFace );
+        Typesetter.typeset_glyph( result, index, currentPen, glyph, fontFace, scalingFactor );
       }
       ++index;
 
-      currentPen.x += glyph.advance;
+      currentPen.x += glyph.advance * scalingFactor;
 
       if ( glyph.depictable() ) {
         lineForward.lastDepictablePen = currentPen;
@@ -152,7 +150,6 @@ class Typesetter {
     //extent.x = glm:: max( lineForward.lastDepictablePen.x, extent.x );
     //extent.y += fontFace.lineHeight();
 
-
     this.typeset_align( lineForward.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, index, result );
     //vertex_transform( label.transform(), label.textColor(), vertices, glyphCloudStart, index );
 
@@ -161,11 +158,11 @@ class Typesetter {
   }
 
   static shouldWordWrap( label: Label, lineWidth: number, pen: Vector3, glyph: Glyph, kerning: number ): boolean {
-    if ( !glyph.depictable() || ( glyph.advance > lineWidth && pen.x <= 0.0 ) ) {
+    if ( !glyph.depictable() || ( glyph.advance * label.scalingFactor > lineWidth && pen.x <= 0.0 ) ) {
       return false;
     }
 
-    return pen.x + glyph.advance + kerning > lineWidth;
+    return pen.x + ( glyph.advance + kerning ) * label.scalingFactor > lineWidth;
   }
 
   static typeset_align( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, bufferArrays: BufferArrays ) {
@@ -186,30 +183,31 @@ class Typesetter {
   }
 
   static typeset_glyph(
-    bufferArrays: BufferArrays, index: number, pen: Vector3, glyph: Glyph, fontFace: FontFace ) {
-    // if ( pen.x < 0 ) {
-    //   console.error( `Could not typeset glyph because pen was at x position ${ pen.x }` );
-    //   return;
-    // }
-
-    console.log( glyph.toChar(), ": ", glyph );
+    bufferArrays: BufferArrays, index: number, pen: Vector3, glyph: Glyph, fontFace: FontFace, scalingFactor: number ) {
+    if ( pen.x < 0 ) {
+      console.error( `Could not typeset glyph because pen was at x position ${ pen.x }` );
+      return;
+    }
 
     const padding = fontFace.glyphTexturePadding;
-    const extent = glyph.subTextureExtent;
+    const extent = glyph.extent;
     const textureOrigin = glyph.subTextureOrigin;
-    const penOrigin = new Vector3( glyph.bearing.x - padding.left, glyph.bearing.y - extent.y - padding.bottom, 0 );
-    const penTangent = new Vector3( extent.x + padding.right + padding.left, 0, 0 );
-    const penUp = new Vector3( 0, extent.y + padding.top + padding.bottom );
-    const texCoords = new Vector4( textureOrigin.x, textureOrigin.y, textureOrigin.x + extent.x, textureOrigin.y + extent.y );
+    const textureExtent = glyph.subTextureExtent;
 
-    //console.log( penOrigin, penTangent, penUp, texCoords );
+    const penOrigin = new Vector3( glyph.bearing.x - padding.left, glyph.bearing.y - extent.y, 0 );
+    const penTangent = new Vector3( extent.width /* + ( padding.right + padding.left ) / 2, 0 */, 0 );
+    const penUp = new Vector3( 0, extent.height /*+ ( padding.top + padding.bottom ) / 2 */, 0 );
+    const texCoords = new Vector4( textureOrigin.x, textureOrigin.y, textureOrigin.x + textureExtent.x, textureOrigin.y + textureExtent.y );
 
-    this.setOrigin( index, bufferArrays, pen.add( penOrigin ) );
+    // scale pens according to scaling factor
+    penOrigin.multiplyScalar( scalingFactor );
+    penTangent.multiplyScalar( scalingFactor );
+    penUp.multiplyScalar( scalingFactor );
+
+    this.setOrigin( index, bufferArrays, penOrigin.add( pen ) );
     this.setTangent( index, bufferArrays, penTangent );
     this.setUp( index, bufferArrays, penUp );
     this.setTexChoords( index, bufferArrays, texCoords );
-
-    console.log( bufferArrays.texCoords );
   }
 
   static getComponentOfBufferArray( index: number, component: Typesetter.Components, bufferArray: Float32Array ): number {
@@ -221,17 +219,17 @@ class Typesetter {
   };
 
   static setOrigin( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x as number; i <= ( Typesetter.Components.y as number ); i++ )
+    for ( let i = Typesetter.Components.x as number; i <= ( Typesetter.Components.z as number ); i++ )
       bufferArrays.origins[ 3 * index + i ] = value.getComponent( i );
   }
 
   static setTangent( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.y; i++ )
+    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.z; i++ )
       bufferArrays.tangents[ 3 * index + i ] = value.getComponent( i );
   }
 
   static setUp( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.y; i++ )
+    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.z; i++ )
       bufferArrays.ups[ 3 * index + i ] = value.getComponent( i );
   }
 
@@ -241,21 +239,27 @@ class Typesetter {
   }
 
   static calculateOrigins( label: Label ): Float32Array {
-    let pen = new Vector3( 0, 0, 0 );
+    let pen = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
 
     const origins = new Float32Array( label.length * 3 );
 
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      origins[ 3 * i + 0 ] = pen.x + ( glyph.bearing.x - label.fontFace.glyphTexturePadding.left ) * label.fontSize;
-      origins[ 3 * i + 1 ] = pen.y + ( glyph.bearing.y - glyph.extent.y ) * label.fontSize;
+      const padding = label.fontFace.glyphTexturePadding;
+      const penOrigin = new Vector3(
+        ( glyph.bearing.x - padding.left ) * label.scalingFactor,
+        ( glyph.bearing.y - glyph.extent.height ) * label.scalingFactor,
+        0 );
+
+      origins[ 3 * i + 0 ] = pen.x + penOrigin.x;
+      origins[ 3 * i + 1 ] = pen.y + penOrigin.y;
       origins[ 3 * i + 2 ] = pen.z;
 
-      pen.x = pen.x + glyph.advance * label.fontSize;
+      pen.x += glyph.advance * label.scalingFactor;
 
       // check for kerning only if not at last glyph of text
       if ( i < label.length - 1 ) {
         const nextGlyph = label.textGlyphs[ i + 1 ];
-        pen.x = pen.x + ( glyph.kerning( nextGlyph.codepoint ) ) * label.fontSize;
+        pen.x += glyph.kerning( nextGlyph.codepoint ) * label.scalingFactor;
       }
     } );
 
@@ -264,8 +268,9 @@ class Typesetter {
 
   static calculateTangents( label: Label ): Float32Array {
     const tangents = new Float32Array( label.length * 3 );
+    const padding = label.fontFace.glyphTexturePadding;
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      tangents[ 3 * i + 0 ] = glyph.extent.width * label.fontSize;
+      tangents[ 3 * i + 0 ] = ( glyph.extent.width /*+ ( padding.right )*/ ) * label.scalingFactor;
       tangents[ 3 * i + 1 ] = 0;
       tangents[ 3 * i + 2 ] = 0;
     } );
@@ -274,9 +279,10 @@ class Typesetter {
 
   static calculateUps( label: Label ): Float32Array {
     const ups = new Float32Array( label.length * 3 );
+    const padding = label.fontFace.glyphTexturePadding;
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
       ups[ 3 * i + 0 ] = 0;
-      ups[ 3 * i + 1 ] = glyph.extent.height * label.fontSize;
+      ups[ 3 * i + 1 ] = ( glyph.extent.height /*+ ( padding.top )*/ ) * label.scalingFactor;
       ups[ 3 * i + 2 ] = 0;
     } );
     return ups;
@@ -285,13 +291,11 @@ class Typesetter {
   static calculateTexCoords( label: Label ): Float32Array {
     const texCoords = new Float32Array( label.length * 4 );
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      console.log( "working: ", glyph.toChar(), ": ", glyph );
       texCoords[ 4 * i + 0 ] = glyph.subTextureOrigin.x;
       texCoords[ 4 * i + 1 ] = glyph.subTextureOrigin.y;
       texCoords[ 4 * i + 2 ] = glyph.subTextureOrigin.x + glyph.subTextureExtent.x;
       texCoords[ 4 * i + 3 ] = glyph.subTextureOrigin.y + glyph.subTextureExtent.y;
     } );
-    console.log( "working: ", texCoords );
     return texCoords;
   }
 }

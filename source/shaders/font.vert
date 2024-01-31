@@ -1,8 +1,5 @@
 precision highp float;
 
-//uniform mat4 modelViewMatrix;
-//uniform mat4 projectionMatrix;
-
 uniform vec3 color;
 
 //attribute vec3 position;

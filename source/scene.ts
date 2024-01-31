@@ -35,7 +35,6 @@ import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-import { EXRLoader } from 'three/examples/jsm/loaders/EXRLoader.js';
 
 import './style.css';
 
@@ -61,13 +60,13 @@ let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let stats: Stats;
 let gui: GUI;
-let font: FontFace;
+let bodyFont: FontFace;
 
 let lastFrame: number;
 
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
-let trikeBoneAnnotations = { enabled: true, scale: 0.05 };
+let trikeBoneAnnotations = { enabled: false, scale: 0.1 };
 
 init();
 animate( 0 );
@@ -85,7 +84,7 @@ function init() {
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
-    camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 100 );
+    camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
     cameraControls = new OrbitControls( camera, canvas );
   }
 
@@ -126,30 +125,30 @@ function init() {
   // ===== 🌱 PLANE =====
   {
     const loader = new TextureLoader( loadingManager );
-    const exrLoader = new EXRLoader( loadingManager );
     const repeatVector = new Vector2( 10, 10 );
+    const wrappingMode = RepeatWrapping;
 
     const floorColorTexture = loader.load( 'rock_pitted_mossy_diff_1k.jpg' );
     floorColorTexture.repeat = repeatVector;
-    floorColorTexture.wrapS = RepeatWrapping;
-    floorColorTexture.wrapT = floorColorTexture.wrapS;
+    floorColorTexture.wrapS = wrappingMode;
+    floorColorTexture.wrapT = wrappingMode;
 
     const floorDispTexture = loader.load( 'rock_pitted_mossy_disp_1k.png' );
     floorDispTexture.repeat = repeatVector;
-    floorDispTexture.wrapS = floorColorTexture.wrapS;
-    floorDispTexture.wrapT = floorColorTexture.wrapS;
+    floorDispTexture.wrapS = wrappingMode;
+    floorDispTexture.wrapT = wrappingMode;
 
-    const floorNormalTexture = exrLoader.load( 'rock_pitted_mossy_nor_gl_1k.exr' );
+    const floorNormalTexture = loader.load( 'rock_pitted_mossy_nor_gl_1k.png' );
     floorNormalTexture.repeat = repeatVector;
-    floorNormalTexture.wrapS = floorColorTexture.wrapS;
-    floorNormalTexture.wrapT = floorColorTexture.wrapS;
+    floorNormalTexture.wrapS = wrappingMode;
+    floorNormalTexture.wrapT = wrappingMode;
 
-    const floorRoughTexture = exrLoader.load( 'rock_pitted_mossy_rough_1k.exr' );
+    const floorRoughTexture = loader.load( 'rock_pitted_mossy_rough_1k.png' );
     floorRoughTexture.repeat = repeatVector;
-    floorRoughTexture.wrapS = floorColorTexture.wrapS;
-    floorRoughTexture.wrapT = floorColorTexture.wrapS;
+    floorRoughTexture.wrapS = wrappingMode;
+    floorRoughTexture.wrapT = wrappingMode;
 
-    const planeGeometry = new PlaneGeometry( 100, 100 );
+    const planeGeometry = new PlaneGeometry( 150, 150, 200, 200 );
     const planeMaterial = new MeshStandardMaterial( {
       map: floorColorTexture,
       displacementMap: floorDispTexture,
@@ -157,6 +156,36 @@ function init() {
       roughnessMap: floorRoughTexture,
       side: 2,
     } );
+    planeMaterial.onBeforeCompile = ( shader ) => {
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        `
+        #include <common>
+        const float mountainFlatRadius = 25.;
+        float mountainHeight(vec3 position)
+        {
+          float radius = max(length(position.xy) - mountainFlatRadius, 0.);
+          return -cos(radius * 0.2) + 1. + sqrt(radius);
+        }
+        `);
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        `
+        vec3 transformed = vec3(position.x, position.y, position.z + mountainHeight(position));
+        `);
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <beginnormal_vertex>',
+        `
+        float step = 0.1;
+        float deltaX = mountainHeight(vec3(position.x + step, position.y, position.z)) - mountainHeight(vec3(position.x - step, position.y, position.z));
+        float deltaY = mountainHeight(vec3(position.x, position.y + step, position.z)) - mountainHeight(vec3(position.x, position.y - step, position.z));
+        vec3 xStep = vec3(2. * step, 0, deltaX);
+        vec3 yStep = vec3(0, 2. * step, deltaY);
+        vec3 objectNormal = cross(xStep, yStep);
+        `);
+      planeMaterial.userData.shader = shader;
+    };
     plane = new Mesh( planeGeometry, planeMaterial );
     plane.rotateX( -Math.PI / 2 );
     plane.position.setY( -0.47 );
@@ -179,9 +208,9 @@ function init() {
           }
         } );
         fern.scale.set( 50, 50, 50 );
-        fern.translateX( -4 );
+        fern.translateX( -3.7 );
         fern.translateY( 0.3 );
-        fern.translateZ( 2 );
+        fern.translateZ( 1 );
         scene.add( fern );
       }
     );
@@ -206,23 +235,38 @@ function init() {
     );
   }
 
-  // ===== 🆎 FONT =====
+  // ===== 🆎 STATIC LABELS =====
   {
-    font = new FontFaceLoader( loadingManager ).load( "cookierun-bold" );
-    const label = new Label( "No", font, new Color( 0x000000 ) );
-    setTimeout( () => {
-      label.text = label.text = "Yes";
-      label.color = new Color( 0xffffff );
-    }, 2000 );
-    label.scale.set( 0.5, 0.5, 0.5 );
-    label.rotateX( -Math.PI / 2 );
-    scene.add( label );
-    label.position.setX( -5 );
+    const triceratopsHeadingText = 'Triceratops horridus';
+    const triceratopsInfoText = `With its three sharp horns and spiky head plate, \r
+    Triceratops horridus must have been an intimidating presence \r
+    as it trampled across western North America in the late Cretaceous period, \r
+    some 69 million years ago. Despite its fierce appearance, \r
+    this famous ceratopsian, or horned dinosaur, was an herbivore.`;
+
+    bodyFont = new FontFaceLoader( loadingManager ).load( 'cookierun-bold' );
+    const headingFont = new FontFaceLoader( loadingManager ).load( 'dmserifdisplay-regular' );
+
+    const headingMyWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xff0000 ) );
+    headingMyWayLabel.useUlrikeTypesetter = true;
+    headingMyWayLabel.position.set( -4, 5, 1 );
+    //const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0x000000 ) );
+    //headingOldWayLabel.position.set( -4, 5, 2 );
+
+    scene.add( headingMyWayLabel/*, headingOldWayLabel*/ );
+
+    const infoTextLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0x000000 ) );
+    infoTextLabel.scale.set( 0.5, 0.5, 0.5 );
+    infoTextLabel.rotateX( -Math.PI / 2 );
+    scene.add( infoTextLabel );
+    infoTextLabel.position.set( 0, 0.4, 4 );
+    infoTextLabel.lineAnchor = Label.LineAnchor.Center;
+    infoTextLabel.alignment = Label.Alignment.Center;
   }
 
   // ===== 🎥 CAMERA =====
   {
-    camera.position.set( 2, 2, 5 );
+    camera.position.set( 0, 10, 20 );
   }
 
   // ===== 🌎 ENVIRONMENT MAP =====
@@ -287,13 +331,16 @@ function init() {
           };
         } );
 
+        const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
+
         // now we create a label for every animation bone
         trikeBones!.forEach( ( bone, index ) => {
-          const label = new Label( bone.name, font, new Color( 0xffffff ) );
+          const label = new Label( bone.name, bodyFont, pride[ index % pride.length ] );
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
           label.attachTo( bone );
           label.translateGlobal( new Vector3( 0.1, 0, 0 ) );
+          label.visible = false;
         } );
 
         scene.add( trike );
@@ -306,7 +353,8 @@ function init() {
           trikeAnimationNames[ i ] = animation.name;
         } );
 
-        trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: false };
+        trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: true };
+        toggleTrikeAnimation();
 
         trike.position.y = 0.8;
 
@@ -408,8 +456,6 @@ function addGui() {
       }
     }
   };
-
-
 
   gui.add( { showSources }, 'showSources' ).name( 'Show Resource Attributions' );
   gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );

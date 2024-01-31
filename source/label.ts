@@ -46,6 +46,7 @@ class Label extends Mesh {
   protected _wordWrap = false;
   protected _alignment = Label.Alignment.Left;
 
+  public useUlrikeTypesetter = false;
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -76,18 +77,16 @@ class Label extends Mesh {
     this.text = text;
     this._lineAnchor;
 
-    this._origins = new Float32Array( this.length * 3 );
-    this._tangents = new Float32Array( this.length * 3 );
-    this._ups = new Float32Array( this.length * 3 );
-    this._texCoords = new Float32Array( this.length * 4 );
+    this._origins = new Float32Array( this.length * 3 ).fill( 0 );
+    this._tangents = new Float32Array( this.length * 3 ).fill( 0 );
+    this._ups = new Float32Array( this.length * 3 ).fill( 0 );
+    this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
     this._geometry = new InstancedBufferGeometry();
     this._geometry.instanceCount = this.length;
 
     this.fontFace = fontFace;
     this._color = color;
-
-    this._geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
 
     this.updateMorphTargets();
   }
@@ -104,12 +103,11 @@ class Label extends Mesh {
       this._needsLayout = true;
       this._needsInitialLayout = false;
       this.material = this.createShaderMaterial( this.fontFace.glyphTexture, this._color );
-      this._fontSize = 1 / this.fontFace.size;
+      //this._fontSize = 1 / this.fontFace.size;
     }
 
-    if ( this._needsLayout ) {
+    if ( this._needsLayout && this.fontFace.ready ) {
       this.layout();
-      console.log( "resulting: ", this.texCoords );
     }
 
     if ( this.projected )
@@ -133,7 +131,7 @@ class Label extends Mesh {
   }
 
   layout() {
-    const typesetResults = Typesetter.typeset( this );
+    const typesetResults = Typesetter.typeset( this, this.useUlrikeTypesetter );
     this.origins = typesetResults.origins;
     this.tangents = typesetResults.tangents;
     this.ups = typesetResults.ups;
@@ -146,6 +144,8 @@ class Label extends Mesh {
   setupGeometry() {
     if ( this._geometry )
       this._geometry.dispose();
+
+    this._geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
 
     this._geometry = new InstancedBufferGeometry();
     this._geometry.instanceCount = this.length;
@@ -420,6 +420,12 @@ class Label extends Mesh {
     }
     this._alignment = alignment;
     this._needsLayout = true;
+  }
+
+  get scalingFactor(): number {
+    if ( !this.fontFace.ready )
+      return 1;
+    return this.fontSize / this.fontFace.size;
   }
 }
 
