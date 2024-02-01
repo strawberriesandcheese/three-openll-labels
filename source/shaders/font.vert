@@ -1,21 +1,16 @@
 precision highp float;
 
-uniform vec3 color;
-
-//attribute vec3 position;
 attribute vec3 origin;
 attribute vec3 tangent;
 attribute vec3 up;
 attribute vec4 texCoords;
 
-varying vec4 vColor;
 varying vec2 vUv;
+varying vec2 vDebugPosition;
 
 void main(){
-  vColor = vec4(color, 1.0);
-  vUv = position.xy;
+  vDebugPosition = position.xy;
 
-  //vUv = mix(texCoords.xy, texCoords.zw, position.xy);
   vUv = texCoords.xy + position.xy * (texCoords.zw - texCoords.xy);
 
   vec3 tangentDirection = position.x * tangent;

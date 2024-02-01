@@ -46,6 +46,8 @@ class Label extends Mesh {
   protected _wordWrap = false;
   protected _alignment = Label.Alignment.Left;
 
+  protected _debugMode = false;
+
   public useUlrikeTypesetter = false;
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
@@ -145,8 +147,6 @@ class Label extends Mesh {
     if ( this._geometry )
       this._geometry.dispose();
 
-    this._geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
-
     this._geometry = new InstancedBufferGeometry();
     this._geometry.instanceCount = this.length;
 
@@ -156,6 +156,7 @@ class Label extends Mesh {
     this._texCoordsAttribute = new InstancedBufferAttribute( this._texCoords, 4 );
 
     this._geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
+
     this._geometry.setAttribute( 'origin', this._originsAttribute );
     this._geometry.setAttribute( 'tangent', this._tangentsAttribute );
     this._geometry.setAttribute( 'up', this._upsAttribute );
@@ -163,11 +164,19 @@ class Label extends Mesh {
   }
 
   updateColor() {
-    if ( !this.material )
+    if ( !this.material.uniforms )
       return;
     this.material.uniforms.color.value = this.color;
     // following line might not be necessary
-    this.material.uniforms.color.value.needsUpdate = true;
+    //this.material.uniforms.color.value.needsUpdate = true;
+  }
+
+  updateDebugArray() {
+    if ( !this.material.uniforms )
+      return;
+    this.material.uniforms.debug.value = this.debugMode;
+    // following line might not be necessary
+    //this.material.uniforms.debug.value.needsUpdate = true;
   }
 
   createShaderMaterial( map: Texture, color: Color ): ShaderMaterial {
@@ -175,10 +184,11 @@ class Label extends Mesh {
       uniforms: {
         color: { value: color },
         map: { value: map },
+        debug: { value: this._debugMode },
       },
       vertexShader,
       fragmentShader,
-
+      transparent: true,
       side: DoubleSide,
     } ) );
   }
@@ -426,6 +436,16 @@ class Label extends Mesh {
     if ( !this.fontFace.ready )
       return 1;
     return this.fontSize / this.fontFace.size;
+  }
+
+  get debugMode(): boolean {
+    return this._debugMode;
+  }
+  set debugMode( debug: boolean ) {
+    if ( this._debugMode === debug )
+      return;
+    this._debugMode = debug;
+    this.updateDebugArray();
   }
 }
 
