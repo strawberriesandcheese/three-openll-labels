@@ -6,13 +6,14 @@ import {
   AxesHelper,
   Bone,
   Color,
+  DirectionalLight,
+  DirectionalLightHelper,
   EquirectangularReflectionMapping,
   GridHelper,
   Group,
   LinearSRGBColorSpace,
   LoadingManager,
   Mesh,
-  MeshLambertMaterial,
   MeshStandardMaterial,
   PCFSoftShadowMap,
   PerspectiveCamera,
@@ -28,7 +29,7 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { DragControls } from 'three/examples/jsm/controls/DragControls';
+//import { DragControls } from 'three/examples/jsm/controls/DragControls';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { toggleFullScreen } from './helpers/fullscreen';
@@ -48,17 +49,26 @@ let scene: Scene;
 let loadingManager: LoadingManager;
 let ambientLight: AmbientLight;
 let pointLight: PointLight;
+let directionalLight: DirectionalLight;
+let directionalLightHelper: DirectionalLightHelper;
 let trike: Group;
 let trikeAnimations: AnimationClip[];
 let trikeBones: Bone[];
+let labels = new Array<Label>;
+let headerLabel: Label;
+let infoLabel: Label;
 let plane: Mesh;
+let gridHelper: GridHelper;
+let palm: Group;
+let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: OrbitControls;
-let dragControls: DragControls;
+//let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let stats: Stats;
+let drawCallPanel: Stats.Panel;
 let gui: GUI;
 let bodyFont: FontFace;
 
@@ -68,7 +78,16 @@ let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
 let trikeBoneAnnotations = { enabled: false, scale: 0.1 };
 
+let debugSettings = { logEnabled: false, glyphDebug: false };
+let loggingInfo = { labels: 0, drawCalls: 0 };
+let previousLoggingInfo = { labels: 0, drawCalls: 0 };
+let numberOfLabels = 0;
+
 init();
+addControls();
+addContent();
+addGui();
+addLabelGui();
 animate( 0 );
 
 
@@ -88,6 +107,9 @@ function init() {
     cameraControls = new OrbitControls( camera, canvas );
   }
 
+}
+
+function addContent() {
   // ===== 👨🏻‍💼 LOADING MANAGER =====
   {
     loadingManager = new LoadingManager();
@@ -110,6 +132,7 @@ function init() {
   // ===== 💡 LIGHTS =====
   {
     ambientLight = new AmbientLight( 'white', 0.4 );
+
     pointLight = new PointLight( '#ffdca8', 80, 100 );
     pointLight.position.set( 3, 10, 5 );
     pointLight.castShadow = true;
@@ -118,8 +141,15 @@ function init() {
     pointLight.shadow.camera.far = 4000;
     pointLight.shadow.mapSize.width = 2048;
     pointLight.shadow.mapSize.height = 2048;
+    pointLight.visible = false;
+
+    directionalLight = new DirectionalLight( '#fdfbd3', 1 );
+    directionalLight.position.set( 13, 7, 10 );
+    directionalLight.castShadow = true;
+
     scene.add( ambientLight );
     scene.add( pointLight );
+    scene.add( directionalLight );
   }
 
   // ===== 🌱 PLANE =====
@@ -200,7 +230,7 @@ function init() {
     loader.load(
       'fern_grass_02.glb',
       ( gltf ) => {
-        const fern = gltf.scene;
+        fern = gltf.scene;
         fern.traverse( ( node ) => {
           if ( node.type === 'Mesh' ) {
             node.castShadow = true;
@@ -212,25 +242,29 @@ function init() {
         fern.translateY( 0.3 );
         fern.translateZ( 1 );
         scene.add( fern );
+
+        addFernGui();
       }
     );
     loader.load(
       'palms.glb',
       ( gltf ) => {
-        const palms = gltf.scene;
-        palms.traverse( ( node ) => {
+        palm = gltf.scene;
+        palm.traverse( ( node ) => {
           if ( node.type === 'Mesh' ) {
             node.castShadow = true;
             node.receiveShadow = true;
           }
         } );
         const palmScale = 0.02;
-        palms.scale.set( palmScale, palmScale, palmScale );
-        palms.translateX( 1.6 );
+        palm.scale.set( palmScale, palmScale, palmScale );
+        palm.translateX( 1.6 );
         //palms.translateY( 0.3 );
-        palms.translateZ( -5 );
-        palms.rotateY( - Math.PI / 3 );
-        scene.add( palms );
+        palm.translateZ( -5 );
+        palm.rotateY( - Math.PI / 3 );
+        scene.add( palm );
+
+        addPalmGui();
       }
     );
   }
@@ -238,30 +272,36 @@ function init() {
   // ===== 🆎 STATIC LABELS =====
   {
     const triceratopsHeadingText = 'Triceratops horridus';
-    const triceratopsInfoText = `With its three sharp horns and spiky head plate, \r
-    Triceratops horridus must have been an intimidating presence \r
-    as it trampled across western North America in the late Cretaceous period, \r
-    some 69 million years ago. Despite its fierce appearance, \r
-    this famous ceratopsian, or horned dinosaur, was an herbivore.`;
+    const triceratopsInfoText =
+      `With its three sharp horns and spiky head plate, Triceratops 
+horridus must have been an intimidating presence 
+as it trampled across western North America in the late Cretaceous period, 
+some 69 million years ago. Despite its fierce appearance, 
+this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
-    bodyFont = new FontFaceLoader( loadingManager ).load( 'cookierun-bold' );
+    bodyFont = new FontFaceLoader( loadingManager ).load( 'cookierun-regular' );
     const headingFont = new FontFaceLoader( loadingManager ).load( 'dmserifdisplay-regular' );
 
-    const headingMyWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xff0000 ) );
-    headingMyWayLabel.useUlrikeTypesetter = true;
-    headingMyWayLabel.position.set( -4, 5, 1 );
-    //const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0x000000 ) );
-    //headingOldWayLabel.position.set( -4, 5, 2 );
+    headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xffffff ) );
+    headerLabel.useUlrikeTypesetter = true;
+    headerLabel.debugMode = false;
+    headerLabel.position.set( -4, 5, 1 );
+    // const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0x000000 ) );
+    // headingOldWayLabel.position.set( -4, 5, 2 );
 
-    scene.add( headingMyWayLabel/*, headingOldWayLabel*/ );
+    scene.add( headerLabel/*, headingOldWayLabel*/ );
+    labels.push( headerLabel );
 
-    const infoTextLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0x000000 ) );
-    infoTextLabel.scale.set( 0.5, 0.5, 0.5 );
-    infoTextLabel.rotateX( -Math.PI / 2 );
-    scene.add( infoTextLabel );
-    infoTextLabel.position.set( 0, 0.4, 4 );
-    infoTextLabel.lineAnchor = Label.LineAnchor.Center;
-    infoTextLabel.alignment = Label.Alignment.Center;
+    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0x000000 ) );
+    labels.push( infoLabel );
+    infoLabel.scale.set( 0.5, 0.5, 0.5 );
+    infoLabel.rotateX( -Math.PI / 2 );
+    scene.add( infoLabel );
+    infoLabel.position.set( 0, 0.4, 4 );
+    infoLabel.lineAnchor = Label.LineAnchor.Center;
+    infoLabel.alignment = Label.Alignment.Center;
+
+    numberOfLabels = labels.length;
   }
 
   // ===== 🎥 CAMERA =====
@@ -290,14 +330,23 @@ function init() {
     pointLightHelper.visible = false;
     scene.add( pointLightHelper );
 
-    const gridHelper = new GridHelper( 20, 20, 'teal', 'darkgray' );
+    directionalLightHelper = new DirectionalLightHelper( directionalLight, undefined, 'orange' );
+    directionalLightHelper.visible = false;
+    scene.add( directionalLightHelper );
+
+    gridHelper = new GridHelper( 20, 20, 'teal', 'darkgray' );
     gridHelper.position.y = -0.01;
+    gridHelper.visible = false;
     scene.add( gridHelper );
+
   }
 
   // ===== 📈 STATS =====
   {
     stats = new Stats();
+    drawCallPanel = new Stats.Panel( 'Draw Calls', '#ff8', '#221' );
+    stats.addPanel( drawCallPanel );
+
     document.body.appendChild( stats.dom );
   }
 
@@ -331,11 +380,14 @@ function init() {
           };
         } );
 
+        cameraControls.target = trike.position.clone();
+
         const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
 
         // now we create a label for every animation bone
         trikeBones!.forEach( ( bone, index ) => {
           const label = new Label( bone.name, bodyFont, pride[ index % pride.length ] );
+          labels.push( label );
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
           label.attachTo( bone );
@@ -356,11 +408,10 @@ function init() {
         trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: true };
         toggleTrikeAnimation();
 
-        trike.position.y = 0.8;
+        trike.position.y = 1;
 
+        addTrikeGui();
         addControls();
-        addGui();
-
       },
       undefined,
       function ( error ) {
@@ -370,14 +421,14 @@ function init() {
 }
 
 function addControls() {
-  cameraControls.target = trike.position.clone();
   cameraControls.enableDamping = true;
   cameraControls.autoRotate = false;
-  cameraControls.maxDistance = 20;
+  cameraControls.maxDistance = 30;
   cameraControls.minDistance = 1;
   cameraControls.maxPolarAngle = 1.5;
   cameraControls.update();
 
+  /*
   dragControls = new DragControls( [ trike ], camera, renderer.domElement );
   //dragControls.transformGroup = true
   dragControls.addEventListener( 'hoveron', ( event ) => {
@@ -401,6 +452,7 @@ function addControls() {
     ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
   } );
   dragControls.enabled = false;
+  */
 
   // Full screen
   window.addEventListener( 'dblclick', ( event ) => {
@@ -411,18 +463,26 @@ function addControls() {
 }
 
 function addGui() {
+  gui.addFolder( 'Labels' );
   gui.addFolder( 'Triceratops' );
 
-  const controlsFolder = gui.addFolder( 'Controls' );
-  controlsFolder.add( dragControls, 'enabled' ).name( 'drag controls' );
+  const envFolder = gui.addFolder( 'Environment' );
+  envFolder.add( plane, 'visible' ).name( 'plane' );
+
+  // const controlsFolder = gui.addFolder( 'Controls' );
+  // controlsFolder.add( dragControls, 'enabled' ).name( 'drag controls' );
 
   const lightsFolder = gui.addFolder( 'Lights' );
   lightsFolder.add( pointLight, 'visible' ).name( 'point light' );
+  lightsFolder.add( directionalLight, 'visible' ).name( 'directional light' );
   lightsFolder.add( ambientLight, 'visible' ).name( 'ambient light' );
 
   const helpersFolder = gui.addFolder( 'Helpers' );
   helpersFolder.add( axesHelper, 'visible' ).name( 'axes' );
+  helpersFolder.add( gridHelper, 'visible' ).name( 'grid' );
   helpersFolder.add( pointLightHelper, 'visible' ).name( 'pointLight' );
+  helpersFolder.add( directionalLightHelper, 'visible' ).name( 'directionalLight' );
+  helpersFolder.add( debugSettings, 'logEnabled' ).name( 'logging' );
 
   const cameraFolder = gui.addFolder( 'Camera' );
   cameraFolder.add( cameraControls, 'autoRotate' );
@@ -459,12 +519,13 @@ function addGui() {
 
   gui.add( { showSources }, 'showSources' ).name( 'Show Resource Attributions' );
   gui.add( { resetGui }, 'resetGui' ).name( 'RESET' );
-  addTrikeGui();
   gui.close();
 }
 
 function addTrikeGui() {
-  const trikeFolder = gui.folders[ 0 ];
+  const trikeFolder = gui.folders[ 1 ];
+  trikeFolder.add( trike, 'visible' ).name( 'show' );
+
   trikeFolder.add( trike.position, 'x' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos x' );
   trikeFolder.add( trike.position, 'y' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos y' );
   trikeFolder.add( trike.position, 'z' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos z' );
@@ -477,6 +538,25 @@ function addTrikeGui() {
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
+}
+
+function addPalmGui() {
+  const folder = gui.folders[ 2 ];
+  folder.add( palm, 'visible' ).name( 'palm' );
+}
+
+function addFernGui() {
+  const folder = gui.folders[ 2 ];
+  folder.add( fern, 'visible' ).name( 'fern' );
+}
+
+function addLabelGui() {
+  const folder = gui.folders[ 0 ];
+  folder.add( headerLabel, 'visible' ).name( 'header' );
+  folder.add( headerLabel, 'text' ).name( 'header text' );
+  folder.add( infoLabel, 'visible' ).name( 'info' );
+  folder.add( infoLabel, 'text' ).name( 'info text' );
+  folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 
 function changeTrikeAnimation( id: string ) {
@@ -501,6 +581,12 @@ function toggleTrikeAnimation() {
   }
 }
 
+function toggleGlyphDebugView( value: boolean ) {
+  for ( const label of labels ) {
+    label.debugMode = value;
+  }
+}
+
 function toggleTrikeBoneAnnotations( value: boolean ) {
   if ( trike ) {
     trikeBones.forEach( bone => {
@@ -509,6 +595,11 @@ function toggleTrikeBoneAnnotations( value: boolean ) {
           child.visible = value;
       } );
     } );
+    if ( value ) {
+      numberOfLabels = labels.length;
+    } else {
+      numberOfLabels -= trikeBones.length;
+    }
   }
 }
 
@@ -523,6 +614,23 @@ function changeTrikeBoneAnnotationsSize( value: number ) {
   }
 }
 
+function debugLog( enabled: boolean ) {
+  loggingInfo.drawCalls = renderer.info.render.calls;
+  loggingInfo.labels = numberOfLabels;
+
+  const infoChanged = (
+    ( loggingInfo.drawCalls != previousLoggingInfo.drawCalls ) ||
+    ( loggingInfo.labels != previousLoggingInfo.labels ) );
+
+  if ( enabled && infoChanged ) {
+    loggingInfo.drawCalls = renderer.info.render.calls;
+    console.log( loggingInfo );
+  }
+
+  previousLoggingInfo.drawCalls = loggingInfo.drawCalls;
+  previousLoggingInfo.labels = loggingInfo.labels;
+}
+
 function animate( timeStamp: number ) {
   requestAnimationFrame( animate );
 
@@ -532,6 +640,7 @@ function animate( timeStamp: number ) {
   lastFrame = timeStamp;
 
   stats.update();
+  drawCallPanel.update( loggingInfo.drawCalls, 150 );
   if ( trike )
     mixer.update( deltaTime / 1000 );
 
@@ -541,6 +650,8 @@ function animate( timeStamp: number ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
+
+  debugLog( debugSettings.logEnabled );
 
   renderer.render( scene, camera );
 

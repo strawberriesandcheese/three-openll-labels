@@ -67,7 +67,7 @@ class FontFace {
      * @param subsequentIndex - The glyph index of the respective subsequent/next glyph.
      * @param kerning - Kerning of the two glyphs in pixel.
      */
-  setKerning( index: GLsizei, subsequentIndex: GLsizei, kerning: number ): void {
+  setKerning( index: number, subsequentIndex: number, kerning: number ): void {
     const glyph = this._glyphs.get( index );
     if ( !glyph || !this.hasGlyph( subsequentIndex ) ) {
       console.error( `Expected glyph or glyph of subsequent index to exist, \

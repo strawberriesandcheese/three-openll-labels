@@ -64,7 +64,6 @@ class FontFaceLoader extends Loader {
         }
         */
         fontFace.ready = status;
-
       },
       // onProgress callback
       ( xhr ) => {

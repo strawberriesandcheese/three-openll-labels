@@ -105,7 +105,6 @@ class Label extends Mesh {
       this._needsLayout = true;
       this._needsInitialLayout = false;
       this.material = this.createShaderMaterial( this.fontFace.glyphTexture, this._color );
-      //this._fontSize = 1 / this.fontFace.size;
     }
 
     if ( this._needsLayout && this.fontFace.ready ) {

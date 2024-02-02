@@ -76,7 +76,7 @@ class Typesetter {
       const glyph = label.textGlyphs[ index ];
       let previousGlyph = new Glyph;
       if ( index > currentLine.startGlyphIndex )
-        previousGlyph = fontFace.glyph( index - 1 );
+        previousGlyph = label.textGlyphs[ index - 1 ];
 
       if ( firstDepictablePenInvalid && glyph.depictable() ) {
         currentLine.firstDepictablePen = currentPen;
@@ -268,9 +268,8 @@ class Typesetter {
 
   static calculateTangents( label: Label ): Float32Array {
     const tangents = new Float32Array( label.length * 3 );
-    const padding = label.fontFace.glyphTexturePadding;
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      tangents[ 3 * i + 0 ] = ( glyph.extent.width /*+ ( padding.right )*/ ) * label.scalingFactor;
+      tangents[ 3 * i + 0 ] = glyph.extent.width * label.scalingFactor;
       tangents[ 3 * i + 1 ] = 0;
       tangents[ 3 * i + 2 ] = 0;
     } );
@@ -279,10 +278,9 @@ class Typesetter {
 
   static calculateUps( label: Label ): Float32Array {
     const ups = new Float32Array( label.length * 3 );
-    const padding = label.fontFace.glyphTexturePadding;
     label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
       ups[ 3 * i + 0 ] = 0;
-      ups[ 3 * i + 1 ] = ( glyph.extent.height /*+ ( padding.top )*/ ) * label.scalingFactor;
+      ups[ 3 * i + 1 ] = glyph.extent.height * label.scalingFactor;
       ups[ 3 * i + 2 ] = 0;
     } );
     return ups;
