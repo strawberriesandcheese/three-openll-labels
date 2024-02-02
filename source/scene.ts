@@ -83,6 +83,9 @@ let loggingInfo = { labels: 0, drawCalls: 0 };
 let previousLoggingInfo = { labels: 0, drawCalls: 0 };
 let numberOfLabels = 0;
 
+let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
+
+
 init();
 addControls();
 addContent();
@@ -283,17 +286,17 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
     bodyFont = new FontFaceLoader( loadingManager ).load( '/fonts/cookierun/cookierun-regular' );
     const headingFont = new FontFaceLoader( loadingManager ).load( '/fonts/dmserifdisplay/dmserifdisplay-regular' );
 
-    headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xf5f5f5 ) );
+    headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.useUlrikeTypesetter = true;
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
-    // const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0x000000 ) );
+    // const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( headerColor ) );
     // headingOldWayLabel.position.set( -4, 5, 2 );
 
     scene.add( headerLabel/*, headingOldWayLabel*/ );
     labels.push( headerLabel );
 
-    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0xf5f5f5 ) );
+    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( colors.infoColor ) );
     labels.push( infoLabel );
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
@@ -383,11 +386,11 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
         cameraControls.target = trike.position.clone();
 
-        const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
+        //const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
 
         // now we create a label for every animation bone
-        trikeBones!.forEach( ( bone, index ) => {
-          const label = new Label( bone.name, bodyFont, pride[ index % pride.length ] );
+        trikeBones!.forEach( ( bone ) => {
+          const label = new Label( bone.name, bodyFont, new Color( colors.annotationColor ) );
           labels.push( label );
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
@@ -539,6 +542,7 @@ function addTrikeGui() {
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
+  trikeFolder.addColor( colors, 'annotationColor' ).name( 'color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
 }
 
 function addPalmGui() {
@@ -555,9 +559,10 @@ function addLabelGui() {
   const folder = gui.folders[ 0 ];
   folder.add( headerLabel, 'visible' ).name( 'header' );
   folder.add( headerLabel, 'text' ).name( 'header text' );
+  folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
-  folder.add( infoLabel, 'text' ).name( 'info text' );
+  folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
@@ -596,6 +601,22 @@ function toggleTrikeBoneAnnotations( value: boolean ) {
       bone.children.forEach( ( child ) => {
         if ( child instanceof Label )
           child.visible = value;
+      } );
+    } );
+    if ( value ) {
+      numberOfLabels = labels.length;
+    } else {
+      numberOfLabels -= trikeBones.length;
+    }
+  }
+}
+
+function updateTrikeBoneAnnotationsColor( value: number ) {
+  if ( trike ) {
+    trikeBones.forEach( bone => {
+      bone.children.forEach( ( child ) => {
+        if ( child instanceof Label )
+          child.color = new Color( value );
       } );
     } );
     if ( value ) {
