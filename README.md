@@ -11,8 +11,8 @@ Three.js + Vite + TypeScript Project to showcase OpenLL-based Font Rendering
 ## Stuff included in the `scene.ts`
 - [x] Triceratops
 - [x] Triceratops Animations
-- [ ] Labels
-- [ ] Animated Labels
+- [x] Labels
+- [x] Animated Labels
 
 ## Tech Stack
 
