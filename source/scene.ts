@@ -542,7 +542,7 @@ function addTrikeGui() {
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
-  trikeFolder.addColor( colors, 'annotationColor' ).name( 'color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
+  trikeFolder.addColor( colors, 'annotationColor' ).name( 'annotation color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
 }
 
 function addPalmGui() {
@@ -562,7 +562,7 @@ function addLabelGui() {
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
-  folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
+  folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
