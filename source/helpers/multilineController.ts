@@ -22,12 +22,6 @@ class MultilineController extends Controller {
       this.setValue( this.$textarea.value );
     } );
 
-    this.$textarea.addEventListener( 'keydown', e => {
-      if ( e.code === 'Enter' ) {
-        this.$textarea.blur();
-      }
-    } );
-
     this.$textarea.addEventListener( 'blur', () => {
       this._callOnFinishChange();
     } );
