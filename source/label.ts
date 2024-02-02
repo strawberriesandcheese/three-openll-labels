@@ -47,6 +47,7 @@ class Label extends Mesh {
   protected _alignment = Label.Alignment.Left;
 
   protected _debugMode = false;
+  protected _aa = true;
 
   public useUlrikeTypesetter = false;
 
@@ -170,10 +171,18 @@ class Label extends Mesh {
     //this.material.uniforms.color.value.needsUpdate = true;
   }
 
-  updateDebugArray() {
+  updateDebug() {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.debug.value = this.debugMode;
+    // following line might not be necessary
+    //this.material.uniforms.debug.value.needsUpdate = true;
+  }
+
+  updateAntialiasing() {
+    if ( !this.material.uniforms )
+      return;
+    this.material.uniforms.aa.value = this._aa;
     // following line might not be necessary
     //this.material.uniforms.debug.value.needsUpdate = true;
   }
@@ -184,6 +193,7 @@ class Label extends Mesh {
         color: { value: color },
         map: { value: map },
         debug: { value: this._debugMode },
+        aa: { value: this._aa },
       },
       vertexShader,
       fragmentShader,
@@ -444,7 +454,17 @@ class Label extends Mesh {
     if ( this._debugMode === debug )
       return;
     this._debugMode = debug;
-    this.updateDebugArray();
+    this.updateDebug();
+  }
+
+  get aa(): boolean {
+    return this._aa;
+  }
+  set aa( aa: boolean ) {
+    if ( this._aa === aa )
+      return;
+    this._aa = aa;
+    this.updateAntialiasing();
   }
 }
 

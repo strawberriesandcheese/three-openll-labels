@@ -555,8 +555,10 @@ function addLabelGui() {
   const folder = gui.folders[ 0 ];
   folder.add( headerLabel, 'visible' ).name( 'header' );
   folder.add( headerLabel, 'text' ).name( 'header text' );
+  folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
   folder.add( infoLabel, 'text' ).name( 'info text' );
+  folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 

@@ -6,10 +6,9 @@ varying vec2 vDebugPosition;
 uniform sampler2D map;
 uniform bool debug;
 uniform vec3 color;
-//uniform bool aa;
+uniform bool aa;
 
 const int channel = 0;
-const bool aa = true;
 
 // Anti-aliasing implementation based on https://github.com/cginternals/webgl-operate/blob/master/source/text/glyph.frag
 float aastep(float t, float value)
