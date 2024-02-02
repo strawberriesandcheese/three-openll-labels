@@ -157,23 +157,24 @@ function addContent() {
     const loader = new TextureLoader( loadingManager );
     const repeatVector = new Vector2( 10, 10 );
     const wrappingMode = RepeatWrapping;
+    const texturePath = "/textures/rock_pitted_mossy/rock_pitted_mossy_";
 
-    const floorColorTexture = loader.load( 'rock_pitted_mossy_diff_1k.jpg' );
+    const floorColorTexture = loader.load( texturePath + "diff_1k.jpg" );
     floorColorTexture.repeat = repeatVector;
     floorColorTexture.wrapS = wrappingMode;
     floorColorTexture.wrapT = wrappingMode;
 
-    const floorDispTexture = loader.load( 'rock_pitted_mossy_disp_1k.png' );
+    const floorDispTexture = loader.load( texturePath + 'disp_1k.png' );
     floorDispTexture.repeat = repeatVector;
     floorDispTexture.wrapS = wrappingMode;
     floorDispTexture.wrapT = wrappingMode;
 
-    const floorNormalTexture = loader.load( 'rock_pitted_mossy_nor_gl_1k.png' );
+    const floorNormalTexture = loader.load( texturePath + 'nor_gl_1k.png' );
     floorNormalTexture.repeat = repeatVector;
     floorNormalTexture.wrapS = wrappingMode;
     floorNormalTexture.wrapT = wrappingMode;
 
-    const floorRoughTexture = loader.load( 'rock_pitted_mossy_rough_1k.png' );
+    const floorRoughTexture = loader.load( texturePath + 'rough_1k.png' );
     floorRoughTexture.repeat = repeatVector;
     floorRoughTexture.wrapS = wrappingMode;
     floorRoughTexture.wrapT = wrappingMode;
@@ -228,7 +229,7 @@ function addContent() {
   {
     const loader = new GLTFLoader( loadingManager );
     loader.load(
-      'fern_grass_02.glb',
+      '/models/fern_grass_02.glb',
       ( gltf ) => {
         fern = gltf.scene;
         fern.traverse( ( node ) => {
@@ -247,7 +248,7 @@ function addContent() {
       }
     );
     loader.load(
-      'palms.glb',
+      '/models/palms.glb',
       ( gltf ) => {
         palm = gltf.scene;
         palm.traverse( ( node ) => {
@@ -279,10 +280,10 @@ as it trampled across western North America in the late Cretaceous period,
 some 69 million years ago. Despite its fierce appearance, 
 this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
-    bodyFont = new FontFaceLoader( loadingManager ).load( 'cookierun-regular' );
-    const headingFont = new FontFaceLoader( loadingManager ).load( 'dmserifdisplay-regular' );
+    bodyFont = new FontFaceLoader( loadingManager ).load( '/fonts/cookierun/cookierun-regular' );
+    const headingFont = new FontFaceLoader( loadingManager ).load( '/fonts/dmserifdisplay/dmserifdisplay-regular' );
 
-    headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xffffff ) );
+    headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( 0xf5f5f5 ) );
     headerLabel.useUlrikeTypesetter = true;
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
@@ -292,7 +293,7 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
     scene.add( headerLabel/*, headingOldWayLabel*/ );
     labels.push( headerLabel );
 
-    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0x000000 ) );
+    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( 0xf5f5f5 ) );
     labels.push( infoLabel );
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
@@ -313,7 +314,7 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
   {
     const loader = new RGBELoader( loadingManager );
     loader.load(
-      'rustig_koppie_puresky_4k.hdr',
+      '/textures/rustig_koppie_puresky_4k.hdr',
       ( texture ) => {
         texture.mapping = EquirectangularReflectionMapping;
         scene.background = texture;
@@ -355,7 +356,7 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
     const loader = new GLTFLoader( loadingManager );
 
     loader.load(
-      '/animated_triceratops_skeleton.glb',
+      '/models/animated_triceratops_skeleton.glb',
       ( gltf ) => {
         trike = gltf.scene;
         trikeBones = new Array<Bone>;
