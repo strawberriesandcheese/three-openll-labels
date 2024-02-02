@@ -42,6 +42,7 @@ import './style.css';
 import { Label } from './label';
 import { FontFace } from './FontFace';
 import { FontFaceLoader } from './FontFaceLoader';
+import { MultilineController } from './helpers/multilineController';
 
 let canvas: HTMLCanvasElement;
 let renderer: WebGLRenderer;
@@ -562,6 +563,7 @@ function addLabelGui() {
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
+  new MultilineController( folder, infoLabel, 'text', 4 ).name( 'info text' );
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
