@@ -63,18 +63,19 @@ class FontFace {
   /**
      * Set the kerning for a glyph w.r.t. to a subsequent glyph in texture space (px). If the glyph is known to this
      * font face, the values are forwarded to the glyphs kerning setter (see Glyph for more information).
-     * @param index - The target glyph index.
-     * @param subsequentIndex - The glyph index of the respective subsequent/next glyph.
+     * @param codepoint - The target glyph index.
+     * @param subsequentCodepoint - The glyph index of the respective subsequent/next glyph.
      * @param kerning - Kerning of the two glyphs in pixel.
      */
-  setKerning( index: number, subsequentIndex: number, kerning: number ): void {
-    const glyph = this._glyphs.get( index );
-    if ( !glyph || !this.hasGlyph( subsequentIndex ) ) {
+  setKerning( codepoint: number, subsequentCodepoint: number, kerning: number ): void {
+    const glyph = this._glyphs.get( codepoint );
+    if ( !glyph || !this.hasGlyph( subsequentCodepoint ) ) {
       console.error( `Expected glyph or glyph of subsequent index to exist, \
-                given ${ index } and ${ subsequentIndex } respectively` );
+                given ${ codepoint } and ${ subsequentCodepoint } respectively` );
       return;
     }
-    glyph.setKerning( subsequentIndex, kerning );
+    console.log( String.fromCodePoint( codepoint ), String.fromCodePoint( subsequentCodepoint ), kerning );
+    glyph.setKerning( subsequentCodepoint, kerning );
   }
 
   /**
