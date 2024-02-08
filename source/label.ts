@@ -24,12 +24,11 @@ import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
 
 
-class Label extends Mesh {
+class Label extends Object3D {
 
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
-  _geometry: InstancedBufferGeometry;
-  declare public material: ShaderMaterial;
+  _mesh: Mesh;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
@@ -85,39 +84,42 @@ class Label extends Mesh {
     this._ups = new Float32Array( this.length * 3 ).fill( 0 );
     this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
-    this._geometry = new InstancedBufferGeometry();
-    this._geometry.instanceCount = this.length;
+    let geometry = new InstancedBufferGeometry();
+    let material = this.createShaderMaterial( new Texture, new Color );
+    this.mesh = new Mesh( geometry, material );
 
     this.fontFace = fontFace;
     this._color = color;
-
-    this.updateMorphTargets();
   }
 
-  // we need to make sure we have an actual font face ready before starting to work with it
-  onBeforeRender( renderer: Renderer, scene: Scene, camera: Camera ) {
-    if ( this._textChanged && this.fontFace.ready ) {
-      this.updateText();
-      this._needsLayout = true;
-      this._textChanged = false;
-    }
+  setOnBeforeRender( mesh: Mesh ) {
+    // we need to make sure we have an actual font face ready before starting to work with it
+    mesh.onBeforeRender =
+      ( renderer: Renderer, scene: Scene, camera: Camera ) => {
+        if ( this._textChanged && this.fontFace.ready ) {
+          this.updateText();
+          this._needsLayout = true;
+          this._textChanged = false;
+        }
 
-    if ( this._needsInitialLayout && this.fontFace.ready ) {
-      this._needsLayout = true;
-      this._needsInitialLayout = false;
-      this.material = this.createShaderMaterial( this.fontFace.glyphTexture, this._color );
-    }
+        if ( this._needsInitialLayout && this.fontFace.ready ) {
+          this._needsLayout = true;
+          this._needsInitialLayout = false;
+          this.updateMap();
+          this.mesh.material = this.material;
+        }
 
-    if ( this._needsLayout && this.fontFace.ready ) {
-      this.layout();
-    }
+        if ( this._needsLayout && this.fontFace.ready ) {
+          this.layout();
+        }
 
-    if ( this.projected )
-      this.lookAt( camera.position );
+        if ( this.projected )
+          this.lookAt( camera.position );
+      };
   }
 
   private updateText() {
-    this._geometry.instanceCount = this.length;
+    this.geometry.instanceCount = this.length;
     this.updateTextGlyphs();
   }
 
@@ -144,29 +146,34 @@ class Label extends Mesh {
   }
 
   setupGeometry() {
-    if ( this._geometry )
-      this._geometry.dispose();
-
-    this._geometry = new InstancedBufferGeometry();
-    this._geometry.instanceCount = this.length;
+    this.geometry = new InstancedBufferGeometry();
+    this.geometry.instanceCount = this.length;
 
     this._originsAttribute = new InstancedBufferAttribute( this._origins, 3 );
     this._tangentsAttribute = new InstancedBufferAttribute( this._tangents, 3 );
     this._upsAttribute = new InstancedBufferAttribute( this._ups, 3 );
     this._texCoordsAttribute = new InstancedBufferAttribute( this._texCoords, 4 );
 
-    this._geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
+    this.geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
 
-    this._geometry.setAttribute( 'origin', this._originsAttribute );
-    this._geometry.setAttribute( 'tangent', this._tangentsAttribute );
-    this._geometry.setAttribute( 'up', this._upsAttribute );
-    this._geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
+    this.geometry.setAttribute( 'origin', this._originsAttribute );
+    this.geometry.setAttribute( 'tangent', this._tangentsAttribute );
+    this.geometry.setAttribute( 'up', this._upsAttribute );
+    this.geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
   }
 
   updateColor() {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.color.value = this.color;
+    // following line might not be necessary
+    //this.material.uniforms.color.value.needsUpdate = true;
+  }
+
+  updateMap() {
+    if ( !this.material.uniforms )
+      return;
+    this.material.uniforms.map.value = this.fontFace.glyphTexture;
     // following line might not be necessary
     //this.material.uniforms.color.value.needsUpdate = true;
   }
@@ -187,7 +194,7 @@ class Label extends Mesh {
     //this.material.uniforms.debug.value.needsUpdate = true;
   }
 
-  createShaderMaterial( map: Texture, color: Color ): ShaderMaterial {
+  createShaderMaterial( map?: Texture, color?: Color ): ShaderMaterial {
     return ( new ShaderMaterial( {
       uniforms: {
         color: { value: color },
@@ -202,10 +209,25 @@ class Label extends Mesh {
     } ) );
   }
 
-  attachTo( object: Object3D ) {
+  /***
+   * @param object Object3D to attach to, label will then change position and rotation based on this object
+   * @param offsetPosition A vector in world space that defines a position offset in world space for each axis
+   * @param offsetRotationAxis A normalized vector in world space - can only be used together with angle!
+   * @param offsetRotationAngle Angle in radians, expects float - can only be used together with axis!
+   */
+  attachTo( object: Object3D, offsetPosition?: Vector3, offsetRotationAxis?: Vector3, offsetRotationAngle?: number ) {
+    if ( offsetRotationAngle && offsetRotationAxis ) {
+      this.rotateOnAxis( offsetRotationAxis, offsetRotationAngle );
+    } else if ( offsetRotationAngle && !offsetRotationAxis ) {
+      console.warn( `You tried to attach ${ this.text } Label with only an offset rotation angle but without rotation axis, an offset rotation needs both therefore no rotation was done` );
+    } else if ( !offsetRotationAngle && offsetRotationAxis ) {
+      console.warn( `You tried to attach ${ this.text } Label with only an offset rotation axis but without rotation angle, an offset rotation needs both therefore no rotation was done` );
+    }
     const ogRotation = this.getWorldQuaternion( new Quaternion() );
     object.add( this );
     this.setGlobalRotation( ogRotation );
+    if ( offsetPosition )
+      this.translateGlobal( offsetPosition );
   }
 
   public setGlobalRotation( targetRotation: Quaternion ) {
@@ -242,6 +264,11 @@ class Label extends Mesh {
 
   lineFeedAt( index: number ): boolean {
     return this.charAt( index ) === this.lineFeed;
+  }
+
+  dispose() {
+    this.geometry.dispose();
+    this.material.dispose();
   }
 
   get fontFace(): FontFace {
@@ -319,11 +346,29 @@ class Label extends Mesh {
     this._texCoords = texCoords;
   }
 
+  protected get material(): ShaderMaterial {
+    return this.mesh.material as ShaderMaterial;
+  }
+  protected set material( material: ShaderMaterial ) {
+    ( this.mesh.material as ShaderMaterial ).dispose();
+    this.mesh.material = material;
+  }
+
   protected get geometry(): InstancedBufferGeometry {
-    return this._geometry;
+    return this.mesh.geometry as InstancedBufferGeometry;
   }
   protected set geometry( geometry: InstancedBufferGeometry ) {
-    this._geometry = geometry;
+    this.mesh.geometry.dispose();
+    this.mesh.geometry = geometry;
+  }
+
+  protected get mesh(): Mesh {
+    return this._mesh;
+  }
+  protected set mesh( mesh: Mesh ) {
+    this._mesh = mesh;
+    this.setOnBeforeRender( this._mesh );
+    this.add( this._mesh );
   }
 
   get color(): Color {

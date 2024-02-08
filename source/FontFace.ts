@@ -74,8 +74,11 @@ class FontFace {
                 given ${ codepoint } and ${ subsequentCodepoint } respectively` );
       return;
     }
-    console.log( String.fromCodePoint( codepoint ), String.fromCodePoint( subsequentCodepoint ), kerning );
     glyph.setKerning( subsequentCodepoint, kerning );
+  }
+
+  dispose() {
+    this.glyphTexture.dispose();
   }
 
   /**

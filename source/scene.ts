@@ -128,8 +128,8 @@ function addContent() {
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
     };
-    loadingManager.onError = () => {
-      console.log( '❌ error while loading' );
+    loadingManager.onError = ( error ) => {
+      console.log( '❌ error while loading:', error );
     };
   }
 
