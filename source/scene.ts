@@ -44,6 +44,10 @@ import { FontFace } from './FontFace';
 import { FontFaceLoader } from './FontFaceLoader';
 import { MultilineController } from './helpers/multilineController';
 
+const base = document.createElement( 'base' );
+base.href = import.meta.env.BASE_URL;
+document.head.insertBefore( base, document.head.firstChild );
+
 let canvas: HTMLCanvasElement;
 let renderer: WebGLRenderer;
 let scene: Scene;
