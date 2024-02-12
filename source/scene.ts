@@ -394,11 +394,12 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
         // now we create a label for every animation bone
         trikeBones!.forEach( ( bone ) => {
           const label = new Label( bone.name, bodyFont, new Color( colors.annotationColor ) );
-          labels.push( label );
+          //labels.push( label );
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
-          label.attachTo( bone );
-          label.translateGlobal( new Vector3( 0.1, 0, 0 ) );
+          const boneLabelPositionOffset = new Vector3( 0.1, 0, 0 );
+          label.attachTo( bone, boneLabelPositionOffset );
+          //label.position.set( boneLabelPositionOffset.x, label.position.y, label.position.z );
           label.visible = false;
         } );
 
