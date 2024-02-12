@@ -402,7 +402,7 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
           label.projected = true;
           label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
           const boneLabelPositionOffset = new Vector3( 0.1, 0, 0 );
-          label.attachTo( bone, boneLabelPositionOffset );
+          label.addTo( bone, boneLabelPositionOffset );
           //label.position.set( boneLabelPositionOffset.x, label.position.y, label.position.z );
           label.visible = false;
         } );

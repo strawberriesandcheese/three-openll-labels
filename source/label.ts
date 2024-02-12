@@ -73,7 +73,7 @@ class Label extends Object3D {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  constructor( text: string, fontFace: FontFace, color: Color ) {
+  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ) ) {
     super();
 
     this.text = text;
@@ -215,7 +215,7 @@ class Label extends Object3D {
    * @param offsetRotationAxis A normalized vector in world space - can only be used together with angle!
    * @param offsetRotationAngle Angle in radians, expects float - can only be used together with axis!
    */
-  attachTo( object: Object3D, offsetPosition?: Vector3, offsetRotationAxis?: Vector3, offsetRotationAngle?: number ) {
+  addTo( object: Object3D, offsetPosition?: Vector3, offsetRotationAxis?: Vector3, offsetRotationAngle?: number ) {
     if ( offsetRotationAngle && offsetRotationAxis ) {
       this.rotateOnAxis( offsetRotationAxis, offsetRotationAngle );
     } else if ( offsetRotationAngle && !offsetRotationAxis ) {
