@@ -2,7 +2,7 @@
  
 Three.js + Vite + TypeScript Project to showcase OpenLL-based Font Rendering
 
-- [Demo]()
+- [Demo](https://strawberriesandcheese.github.io/three-openll-labels/)
 - [Jump to CLI commands](#cli-commands)
 
 ---
