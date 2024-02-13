@@ -20,11 +20,9 @@
     "skipLibCheck": true,
     "strictPropertyInitialization": false
   },
-  "files": [
-      "source/scene.ts"
-  ],
-  "include": [
-    "source/**/*.ts"
+  "include": [ 
+      "lib",
+      "source"
   ],
   "exclude": [
       "node_modules",

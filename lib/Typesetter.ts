@@ -1,5 +1,5 @@
 import { Vector3, Vector4 } from "three";
-import { Label } from "./label";
+import { Label } from "./Label";
 import { Glyph } from "./Glyph";
 import { FontFace } from "./FontFace";
 

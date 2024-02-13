@@ -39,9 +39,9 @@ import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 
 import './style.css';
 
-import { Label } from './label';
-import { FontFace } from './FontFace';
-import { FontFaceLoader } from './FontFaceLoader';
+import { Label } from '../lib/main';
+import { FontFace } from '../lib/main';
+import { FontFaceLoader } from '../lib/main';
 import { MultilineController } from './helpers/multilineController';
 
 const base = document.createElement( 'base' );

@@ -1,13 +1,13 @@
 {
   "name": "three-openll-labels",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "build lib": "tsc && vite build --mode library"
+    "build:lib": "tsc --p ./tsconfig.build.lib.json && vite build --mode library"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",

@@ -110,13 +110,19 @@ Run dev mode
 npm run dev
 ```
 
-Build
+Build library
+
+```bash
+npm run build:lib
+```
+
+Build demo
 
 ```bash
 npm run build
 ```
 
-Run build
+Run demo build
 
 ```bash
 npm run preview
