@@ -1,24 +1,46 @@
 {
   "name": "three-openll-labels",
-  "private": true,
+  "description": "Adds labelling capabilities using signed distance field rendering of fonts to three.js",
+  "author": "strawberriesandcheese",
+  "license": "MIT",
+  "homepage": "https://github.com/strawberriesandcheese",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/strawberriesandcheese/three-openll-labels.git"
+  },
+  "bugs": {
+    "url": "https://github.com/strawberriesandcheese/three-openll-labels/issues"
+  },
+  "keywords": [
+    "three",
+    "sdf",
+    "labelling",
+    "labels",
+    "typescript"
+  ],
   "version": "0.0.1",
   "type": "module",
+  "main": "dist/lib/three-openll-labels.js",
+  "types": "dist/lib/three-openll-labels.d.ts",
+  "files": [
+    "dist/lib"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "build:lib": "tsc --p ./tsconfig.build.lib.json && vite build --mode library"
+    "build:lib": "tsc --p ./tsconfig.build.lib.json && vite build --mode library",
+    "prepack": "tsc --p ./tsconfig.build.lib.json && vite build --mode library"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/three": "^0.158.1",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
-    "vite-plugin-dts": "^3.7.2"
+    "vite-plugin-dts": "^3.7.2",
+    "lil-gui": "^0.19.1"
   },
   "dependencies": {
-    "lil-gui": "^0.19.1",
-    "rxjs": "^7.8.1",
     "three": "^0.158.0"
   }
 }
