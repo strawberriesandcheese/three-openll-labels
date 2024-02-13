@@ -67,17 +67,17 @@ scene.add(lonelyLabel);
 scene.add(cube); //attached label is automatically also added to scene
 ```
 ### 6. Settings
-- ```aa```
-- ```alignment```
-- ```color```
-- ```debugMode```
-- ```fontface```
-- ```fontsize```
-- ```lineAnchor```
-- ```lineFeed```
-- ```lineWidth```
-- ```projected```
-- ```text```
+- ```aa```: anti-aliasing on when true
+- ```alignment```: set text alignment to left, center or right
+- ```color```: change text color
+- ```debugMode```: draws green borders around all glyphs
+- ```fontface```: change font
+- ```fontsize```: change font size (can be used as an alternativ to scaling)
+- ```lineAnchor```: set line anchor to baseline, descnedant, ascendant and others
+- ```lineFeed```: set line feed character (default is normal new line)
+- ```lineWidth```: set line width after which there is an automatic line feed
+- ```projected```: labels automatically turn to camera viewport when true
+- ```text```: change text content
 - ```wordwrap```
 
 ## Stuff included in the `scene.ts`

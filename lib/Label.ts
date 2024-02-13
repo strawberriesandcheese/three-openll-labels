@@ -371,6 +371,9 @@ class Label extends Object3D {
     this.add( this._mesh );
   }
 
+  /**
+   * Text color as THREE.Color
+   */
   get color(): Color {
     return this._color;
   }
@@ -475,6 +478,10 @@ class Label extends Object3D {
     return this._wordWrap;
   }
 
+  /**
+   * Text alignment, can be any from
+   * @param Label.Alignment
+   */
   get alignment(): Label.Alignment {
     return this._alignment;
   }
@@ -492,6 +499,9 @@ class Label extends Object3D {
     return this.fontSize / this.fontFace.size;
   }
 
+  /**
+   * Draws green borders around all glyphs when true
+   */
   get debugMode(): boolean {
     return this._debugMode;
   }
@@ -502,6 +512,9 @@ class Label extends Object3D {
     this.updateDebug();
   }
 
+  /**
+   * Anti-aliasing setting, set to true to turn on and false to turn off.
+   */
   get aa(): boolean {
     return this._aa;
   }
