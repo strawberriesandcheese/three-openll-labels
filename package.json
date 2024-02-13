@@ -35,10 +35,10 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "@types/three": "^0.158.1",
+    "lil-gui": "^0.19.1",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
-    "vite-plugin-dts": "^3.7.2",
-    "lil-gui": "^0.19.1"
+    "vite-plugin-dts": "^3.7.2"
   },
   "dependencies": {
     "three": "^0.158.0"
