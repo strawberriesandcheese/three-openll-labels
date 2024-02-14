@@ -213,7 +213,6 @@ class Typesetter {
   // }
 
   static shouldWrap( label: Label, pen: Vector3, glyph: Glyph, kerning: number ): boolean {
-    console.log( label.lineWidth );
     if ( !glyph.depictable() || ( glyph.advance * label.scalingFactor > ( label.lineWidth ) && pen.x <= 0.0 ) ) {
       return false;
     }
