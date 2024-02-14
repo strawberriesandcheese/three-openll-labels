@@ -1,0 +1,47 @@
+# Simple workflow for testing whether library builds
+name: Test whether project builds
+
+on:
+  # Runs on pull requests targeting the default branch
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+    branches:
+      - 'main'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  old:
+    name: tsc
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: install node v12
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
+    - name: yarn install
+      run: yarn install
+    - name: tsc
+      uses: icrawl/action-tsc@v1
+  # Single deploy job since we're just deploying
+  tsc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+      - name: Install dependencies
+        run: npm install
+      - name: Build lib
+        run: npm run build:lib
+      - name: Build demo
+        run: npm run build
