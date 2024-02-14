@@ -1,4 +1,4 @@
-import { Vector3, Vector4 } from "three";
+import { Vector2, Vector3, Vector4 } from "three";
 import { Label } from "./Label";
 import { Glyph } from "./Glyph";
 import { FontFace } from "./FontFace";
@@ -31,10 +31,51 @@ class Typesetter {
   }
 
   static typesetMyWay( label: Label ): BufferArrays {
-    const origins = this.calculateOrigins( label );
-    const tangents = this.calculateTangents( label );
-    const ups = this.calculateUps( label );
-    const texCoords = this.calculateTexCoords( label );
+    let { origins, tangents, ups, texCoords } = this.initArrays( label.length );
+
+    const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
+    let pen = new Vector3;
+    pen.copy( penStartPosition );
+    let lineStartGlyphIndex = 0;
+
+    for ( let i = 0; i < label.textGlyphs.length; i++ ) {
+      let glyph = label.textGlyphs[ i ];
+      const lineHeight = label.fontFace.lineHeight;
+
+      // first let's check if we reached a line break
+      if ( label.lineFeedAt( i ) ) {
+        // a line break as a start would be weird but not unheard of
+        if ( i === 0 )
+          console.warn( "trying to feed line at index 0" );
+
+        pen.y -= lineHeight * label.scalingFactor;
+
+        // do alignment stuff
+        this.alignLine( pen, label.alignment, lineStartGlyphIndex, i, origins );
+
+        lineStartGlyphIndex = i + 1;
+        pen.x = penStartPosition.x;
+      } else {
+        // check for kerning only if not at last glyph of text and no line feed preceeded
+        if ( i < label.length - 1 ) {
+          const nextGlyph = label.textGlyphs[ i + 1 ];
+          pen.x += glyph.kerning( nextGlyph.codepoint ) * label.scalingFactor;
+        }
+      }
+
+      // we only need to process renderable glyphs
+      if ( glyph.depictable() ) {
+        this.calculateOrigin( pen, label, i, origins );
+        this.calculateTangent( label, i, tangents );
+        this.calculateUp( label, i, ups );
+        this.calculateTexCoords( label, i, texCoords );
+      }
+
+      pen.x += glyph.advance * label.scalingFactor;
+    }
+
+    // handle alignment for last line
+    this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.textGlyphs.length - 1, origins );
 
     return { origins, tangents, ups, texCoords };
   }
@@ -238,63 +279,55 @@ class Typesetter {
       bufferArrays.texCoords[ 4 * index + i ] = value.getComponent( i );
   }
 
-  static calculateOrigins( label: Label ): Float32Array {
-    let pen = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
+  static alignLine( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, origins: Float32Array ) {
+    if ( alignment === Label.Alignment.Left ) {
+      return;
+    }
 
-    const origins = new Float32Array( label.length * 3 );
+    let penOffset = -pen.x;
 
-    label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      const padding = label.fontFace.glyphTexturePadding;
-      const penOrigin = new Vector3(
-        ( glyph.bearing.x - padding.left ) * label.scalingFactor,
-        ( glyph.bearing.y - glyph.extent.height ) * label.scalingFactor,
-        0 );
+    if ( alignment == Label.Alignment.Center ) {
+      penOffset *= 0.5;
+    }
 
-      origins[ 3 * i + 0 ] = pen.x + penOrigin.x;
-      origins[ 3 * i + 1 ] = pen.y + penOrigin.y;
-      origins[ 3 * i + 2 ] = pen.z;
-
-      pen.x += glyph.advance * label.scalingFactor;
-
-      // check for kerning only if not at last glyph of text
-      if ( i < label.length - 1 ) {
-        const nextGlyph = label.textGlyphs[ i + 1 ];
-        pen.x += glyph.kerning( nextGlyph.codepoint ) * label.scalingFactor;
-      }
-    } );
-
-    return origins;
+    // Origin is expected to be in 'font face space' (not transformed)
+    for ( let i = begin; i != end; ++i ) {
+      origins[ 3 * i + Typesetter.Components.x ] += penOffset;
+    }
   }
 
-  static calculateTangents( label: Label ): Float32Array {
-    const tangents = new Float32Array( label.length * 3 );
-    label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      tangents[ 3 * i + 0 ] = glyph.extent.width * label.scalingFactor;
-      tangents[ 3 * i + 1 ] = 0;
-      tangents[ 3 * i + 2 ] = 0;
-    } );
-    return tangents;
+  static calculateOrigin( pen: Vector3, label: Label, glyphIndex: number, origins: Float32Array ) {
+    const glyph = label.textGlyphs[ glyphIndex ];
+    const padding = label.fontFace.glyphTexturePadding;
+    const penOrigin = new Vector2(
+      ( glyph.bearing.x - padding.left ) * label.scalingFactor,
+      ( glyph.bearing.y - glyph.extent.height ) * label.scalingFactor );
+
+    origins[ 3 * glyphIndex + 0 ] += pen.x + penOrigin.x;
+    origins[ 3 * glyphIndex + 1 ] += pen.y + penOrigin.y;
+    origins[ 3 * glyphIndex + 2 ] += pen.z;
   }
 
-  static calculateUps( label: Label ): Float32Array {
-    const ups = new Float32Array( label.length * 3 );
-    label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      ups[ 3 * i + 0 ] = 0;
-      ups[ 3 * i + 1 ] = glyph.extent.height * label.scalingFactor;
-      ups[ 3 * i + 2 ] = 0;
-    } );
-    return ups;
+  static calculateTangent( label: Label, glyphIndex: number, tangents: Float32Array ) {
+    const glyph = label.textGlyphs[ glyphIndex ];
+    tangents[ 3 * glyphIndex + 0 ] = glyph.extent.width * label.scalingFactor;
+    tangents[ 3 * glyphIndex + 1 ] = 0;
+    tangents[ 3 * glyphIndex + 2 ] = 0;
   }
 
-  static calculateTexCoords( label: Label ): Float32Array {
-    const texCoords = new Float32Array( label.length * 4 );
-    label.textGlyphs.forEach( ( glyph: Glyph, i: number ) => {
-      texCoords[ 4 * i + 0 ] = glyph.subTextureOrigin.x;
-      texCoords[ 4 * i + 1 ] = glyph.subTextureOrigin.y;
-      texCoords[ 4 * i + 2 ] = glyph.subTextureOrigin.x + glyph.subTextureExtent.x;
-      texCoords[ 4 * i + 3 ] = glyph.subTextureOrigin.y + glyph.subTextureExtent.y;
-    } );
-    return texCoords;
+  static calculateUp( label: Label, glyphIndex: number, ups: Float32Array ) {
+    const glyph = label.textGlyphs[ glyphIndex ];
+    ups[ 3 * glyphIndex + 0 ] = 0;
+    ups[ 3 * glyphIndex + 1 ] = glyph.extent.height * label.scalingFactor;
+    ups[ 3 * glyphIndex + 2 ] = 0;
+  }
+
+  static calculateTexCoords( label: Label, glyphIndex: number, texCoords: Float32Array ) {
+    const glyph = label.textGlyphs[ glyphIndex ];
+    texCoords[ 4 * glyphIndex + 0 ] = glyph.subTextureOrigin.x;
+    texCoords[ 4 * glyphIndex + 1 ] = glyph.subTextureOrigin.y;
+    texCoords[ 4 * glyphIndex + 2 ] = glyph.subTextureOrigin.x + glyph.subTextureExtent.x;
+    texCoords[ 4 * glyphIndex + 3 ] = glyph.subTextureOrigin.y + glyph.subTextureExtent.y;
   }
 }
 
