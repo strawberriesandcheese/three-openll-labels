@@ -42,7 +42,7 @@ class Label extends Object3D {
   protected _fontSize = 1;
   protected _lineWidth = 100;
   protected _lineFeed = Label.DEFAULT_LINE_FEED;
-  protected _wordWrap = false;
+  protected _wrap = false;
   protected _alignment = Label.Alignment.Left;
 
   protected _debugMode = false;
@@ -442,17 +442,18 @@ class Label extends Object3D {
     return offset;
   }
 
+  /**
+     * Line width after which there is an automatic line feed if {@link wrap} is enabled
+     */
   get lineWidth(): number {
-    if ( !this.fontFace.ready )
-      return NaN;
-    return this._lineWidth * this._fontFace!.size / this.fontSize;
+    return this._lineWidth;
   }
   set lineWidth( lineWidth: number ) {
     if ( this._lineWidth === lineWidth ) {
       return;
     }
     this._lineWidth = lineWidth;
-    this._needsLayout;
+    this._needsLayout = true;
   }
 
   get lineFeed(): string {
@@ -468,14 +469,15 @@ class Label extends Object3D {
     this._needsLayout = true;
   }
 
-  set wordWrap( flag: boolean ) {
-    if ( this._wordWrap === flag )
-      return;
-    this._wordWrap = flag;
-    this._needsLayout = true;
+  /**
+     * If enabled, breaks lines automatically at {@link lineWidth} (while typesetting)
+     */
+  set wrap( flag: boolean ) {
+    this._wrap = flag;
   }
-  get wordWrap(): boolean {
-    return this._wordWrap;
+  get wrap(): boolean {
+    return this._wrap;
+    this._needsLayout = true;
   }
 
   /**

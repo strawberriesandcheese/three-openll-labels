@@ -7,8 +7,13 @@ type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float3
 
 // Setup common delimiters for wordwrapping
 const delimiters = [ '\x0A', ' ', ',', '.', '-', '/', '(', ')', '[', ']', '<', '>', '.' ];
-const isDelimiter = ( character: string ): boolean => {
-  return delimiters.includes( character );
+const isDelimiter = ( codepoint: number ): boolean => {
+  return delimiters.includes( String.fromCodePoint( codepoint ) );
+};
+
+//Since space is technically renderable but we do not want to render it at the start of lines we have to handle it seperately
+const isSpace = ( codepoint: number ): boolean => {
+  return String.fromCodePoint( codepoint ) === ' ';
 };
 
 class Typesetter {
@@ -16,9 +21,7 @@ class Typesetter {
   protected _glyphLine: number[];
 
   static typeset( label: Label, useMyWay: boolean ): BufferArrays {
-    if ( useMyWay )
-      return this.typesetMyWay( label );
-    return this.typesetLabel( label );
+    return this.typesetMyWay( label );
   }
 
   static initArrays( size: number ): BufferArrays {
@@ -36,14 +39,21 @@ class Typesetter {
     const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
     let pen = new Vector3;
     pen.copy( penStartPosition );
-    let lineStartGlyphIndex = 0;
+    let glyphStart = 0;
+    let lineStartGlyphIndex = glyphStart;
 
-    for ( let i = 0; i < label.textGlyphs.length; i++ ) {
+    for ( let i = glyphStart; i < label.textGlyphs.length; i++ ) {
       let glyph = label.textGlyphs[ i ];
       const lineHeight = label.fontFace.lineHeight;
 
       // first let's check if we reached a line break
-      if ( label.lineFeedAt( i ) ) {
+      const kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
+
+      const afterDelimiter = ( i != glyphStart ? isDelimiter( label.textGlyphs[ i - 1 ].codepoint ) : false );
+      const newWord = ( i != lineStartGlyphIndex ? ( !label.textGlyphs[ i ].depictable() || afterDelimiter ) : false );
+      const feedLine = label.lineFeedAt( i ) || ( label.wrap && newWord && this.shouldWrap( label, pen, glyph, kerning ) );
+
+      if ( feedLine ) {
         // a line break as a start would be weird but not unheard of
         if ( i === 0 )
           console.warn( "trying to feed line at index 0" );
@@ -53,8 +63,12 @@ class Typesetter {
         // do alignment stuff
         this.alignLine( pen, label.alignment, lineStartGlyphIndex, i, origins );
 
-        lineStartGlyphIndex = i + 1;
+        lineStartGlyphIndex = i;
         pen.x = penStartPosition.x;
+
+        if ( isSpace( glyph.codepoint ) )
+          continue;
+
       } else {
         // check for kerning only if not at last glyph of text and no line feed preceeded
         if ( i < label.length - 1 ) {
@@ -75,208 +89,136 @@ class Typesetter {
     }
 
     // handle alignment for last line
-    this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.textGlyphs.length - 1, origins );
+    this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.textGlyphs.length, origins );
 
     return { origins, tangents, ups, texCoords };
   }
 
-  static typesetLabel( label: Label ): BufferArrays {
-    type SegmentInformation =
-      {
-        firstDepictablePen: Vector3;
-        lastDepictablePen: Vector3;
-        startGlyphIndex: number;
-      };
+  // static typesetLabel( label: Label ): BufferArrays {
+  //   type SegmentInformation =
+  //     {
+  //       firstDepictablePen: Vector3;
+  //       lastDepictablePen: Vector3;
+  //       startGlyphIndex: number;
+  //     };
 
-    // Get font face and label scaling factor
-    const fontFace = label.fontFace;
-    const scalingFactor = label.scalingFactor;
+  //   // Get font face and label scaling factor
+  //   const fontFace = label.fontFace;
+  //   const scalingFactor = label.scalingFactor;
 
-    // Append vertex cloud: the maximum number of visible glyphs is the size of the string
-    const result = this.initArrays( label.length );
+  //   // Append vertex cloud: the maximum number of visible glyphs is the size of the string
+  //   const result = this.initArrays( label.length );
 
-    let glyphStart = 0;
+  //   let glyphStart = 0;
 
-    const currentPen = new Vector3( 0, label.lineAnchorOffset * scalingFactor, 0 );
-    const currentLine: SegmentInformation = {
-      firstDepictablePen: currentPen,
-      lastDepictablePen: currentPen,
-      startGlyphIndex: glyphStart
-    };
-    const lineForward: SegmentInformation = {
-      firstDepictablePen: currentPen,
-      lastDepictablePen: currentPen,
-      startGlyphIndex: glyphStart
-    };
+  //   const currentPen = new Vector3( 0, label.lineAnchorOffset * scalingFactor, 0 );
+  //   const currentLine: SegmentInformation = {
+  //     firstDepictablePen: currentPen,
+  //     lastDepictablePen: currentPen,
+  //     startGlyphIndex: glyphStart
+  //   };
+  //   const lineForward: SegmentInformation = {
+  //     firstDepictablePen: currentPen,
+  //     lastDepictablePen: currentPen,
+  //     startGlyphIndex: glyphStart
+  //   };
 
-    const lineWidth = Math.max( label.lineWidth * scalingFactor, glyphStart );
+  //   const lineWidth = Math.max( label.lineWidth * scalingFactor, glyphStart );
 
-    let firstDepictablePenInvalid = true;
-    let index = glyphStart;
-    for ( index; index < label.length; ) {
-      const glyph = label.textGlyphs[ index ];
-      let previousGlyph = new Glyph;
-      if ( index > currentLine.startGlyphIndex )
-        previousGlyph = label.textGlyphs[ index - 1 ];
+  //   let firstDepictablePenInvalid = true;
+  //   let index = glyphStart;
+  //   for ( index; index < label.length; ) {
+  //     const glyph = label.textGlyphs[ index ];
+  //     let previousGlyph = new Glyph;
+  //     if ( index > currentLine.startGlyphIndex )
+  //       previousGlyph = label.textGlyphs[ index - 1 ];
 
-      if ( firstDepictablePenInvalid && glyph.depictable() ) {
-        currentLine.firstDepictablePen = currentPen;
-        firstDepictablePenInvalid = false;
-      }
+  //     if ( firstDepictablePenInvalid && glyph.depictable() ) {
+  //       currentLine.firstDepictablePen = currentPen;
+  //       firstDepictablePenInvalid = false;
+  //     }
 
-      // Handle line feeds as well as word wrap for next word
-      // (or next glyph if word width exceeds the max line width)
-      const kerning = ( index != glyphStart ? previousGlyph.kerning( glyph.codepoint ) : 0 );
-      const feedLine = label.lineFeedAt( index ) || ( label.wordWrap &&
-        this.shouldWordWrap( label, lineWidth, currentPen, glyph, kerning ) );
+  //     // Handle line feeds as well as word wrap for next word
+  //     // (or next glyph if word width exceeds the max line width)
+  //     const kerning = ( index != glyphStart ? previousGlyph.kerning( glyph.codepoint ) : 0 );
+  //     const feedLine = label.lineFeedAt( index ) || ( label.wrap &&
+  //       this.shouldWordWrap( label, lineWidth, currentPen, glyph, kerning ) );
 
-      if ( feedLine ) {
-        if ( index === glyphStart )
-          console.warn( "trying to feed line at index 0" );
+  //     if ( feedLine ) {
+  //       if ( index === glyphStart )
+  //         console.warn( "trying to feed line at index 0" );
 
-        // extent.x = glm:: max( currentLine.lastDepictablePen.x, extent.x );
-        // extent.y += fontFace.lineHeight();
+  //       // extent.x = glm:: max( currentLine.lastDepictablePen.x, extent.x );
+  //       // extent.y += fontFace.lineHeight();
 
-        const lineHeight = fontFace.lineHeight;
-        currentPen.y -= lineHeight * scalingFactor;
+  //       const lineHeight = fontFace.lineHeight;
+  //       currentPen.y -= lineHeight * scalingFactor;
 
-        // Handle newline and alignment
-        this.typeset_align( currentLine.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, lineForward.startGlyphIndex, result );
+  //       // Handle newline and alignment
+  //       this.typeset_align( currentLine.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, lineForward.startGlyphIndex, result );
 
-        // Omit relayouting
-        let xOffset = currentLine.firstDepictablePen.x;
+  //       // Omit relayouting
+  //       let xOffset = currentLine.firstDepictablePen.x;
 
-        for ( let j = lineForward.startGlyphIndex; j != index; ++j ) {
-          // not sure if next line is necessary. discuss
-          result.origins[ 3 * j + Typesetter.Components.x ] -= xOffset * scalingFactor;
-          result.origins[ 3 * j + Typesetter.Components.y ] -= lineHeight * scalingFactor;
-          //result.origins[ j ].x -= xOffset;
-          //v.origin.y -= lineHeight;
-        }
+  //       for ( let j = lineForward.startGlyphIndex; j != index; ++j ) {
+  //         // not sure if next line is necessary. discuss
+  //         result.origins[ 3 * j + Typesetter.Components.x ] -= xOffset * scalingFactor;
+  //         result.origins[ 3 * j + Typesetter.Components.y ] -= lineHeight * scalingFactor;
+  //         //result.origins[ j ].x -= xOffset;
+  //         //v.origin.y -= lineHeight;
+  //       }
 
-        currentPen.x = Math.max( lineForward.startGlyphIndex >= index ? 0 : currentPen.x - xOffset, 0 ) * scalingFactor;
-        currentLine.startGlyphIndex = lineForward.startGlyphIndex;
-        lineForward.startGlyphIndex = index;
+  //       currentPen.x = Math.max( lineForward.startGlyphIndex >= index ? 0 : currentPen.x - xOffset, 0 ) * scalingFactor;
+  //       currentLine.startGlyphIndex = lineForward.startGlyphIndex;
+  //       lineForward.startGlyphIndex = index;
 
-        currentLine.lastDepictablePen = currentPen;
-        lineForward.firstDepictablePen = new Vector3( 0, currentPen.y, 0 );
-        lineForward.lastDepictablePen = currentPen;
-      }
-      else {   // Apply kerning if no line feed precedes
-        currentPen.x += kerning * scalingFactor;
-      }
+  //       currentLine.lastDepictablePen = currentPen;
+  //       lineForward.firstDepictablePen = new Vector3( 0, currentPen.y, 0 );
+  //       lineForward.lastDepictablePen = currentPen;
+  //     }
+  //     else {   // Apply kerning if no line feed precedes
+  //       currentPen.x += kerning * scalingFactor;
+  //     }
 
-      // Typeset glyphs in vertex cloud (only if renderable)
-      if ( glyph.depictable() ) {
-        //vertices.push_back( GlyphVertexCloud:: Vertex() );
-        Typesetter.typeset_glyph( result, index, currentPen, glyph, fontFace, scalingFactor );
-      }
-      ++index;
+  //     // Typeset glyphs in vertex cloud (only if renderable)
+  //     if ( glyph.depictable() ) {
+  //       //vertices.push_back( GlyphVertexCloud:: Vertex() );
+  //       Typesetter.typeset_glyph( result, index, currentPen, glyph, fontFace, scalingFactor );
+  //     }
+  //     ++index;
 
-      currentPen.x += glyph.advance * scalingFactor;
+  //     currentPen.x += glyph.advance * scalingFactor;
 
-      if ( glyph.depictable() ) {
-        lineForward.lastDepictablePen = currentPen;
-      }
+  //     if ( glyph.depictable() ) {
+  //       lineForward.lastDepictablePen = currentPen;
+  //     }
 
-      if ( feedLine || isDelimiter( glyph.toChar() ) ) {
-        currentLine.lastDepictablePen = lineForward.lastDepictablePen;
-        firstDepictablePenInvalid = true;
-        lineForward.startGlyphIndex = index;
-      }
+  //     if ( feedLine || isDelimiter( glyph.toChar() ) ) {
+  //       currentLine.lastDepictablePen = lineForward.lastDepictablePen;
+  //       firstDepictablePenInvalid = true;
+  //       lineForward.startGlyphIndex = index;
+  //     }
 
-    }
+  //   }
 
-    // Handle alignment (when last line of the label is processed)
-    //extent.x = glm:: max( lineForward.lastDepictablePen.x, extent.x );
-    //extent.y += fontFace.lineHeight();
+  //   // Handle alignment (when last line of the label is processed)
+  //   //extent.x = glm:: max( lineForward.lastDepictablePen.x, extent.x );
+  //   //extent.y += fontFace.lineHeight();
 
-    this.typeset_align( lineForward.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, index, result );
-    //vertex_transform( label.transform(), label.textColor(), vertices, glyphCloudStart, index );
+  //   this.typeset_align( lineForward.lastDepictablePen, label.alignment, currentLine.startGlyphIndex, index, result );
+  //   //vertex_transform( label.transform(), label.textColor(), vertices, glyphCloudStart, index );
 
-    return result;
-    //return extent_transform( label, extent );
-  }
+  //   return result;
+  //   //return extent_transform( label, extent );
+  // }
 
-  static shouldWordWrap( label: Label, lineWidth: number, pen: Vector3, glyph: Glyph, kerning: number ): boolean {
-    if ( !glyph.depictable() || ( glyph.advance * label.scalingFactor > lineWidth && pen.x <= 0.0 ) ) {
+  static shouldWrap( label: Label, pen: Vector3, glyph: Glyph, kerning: number ): boolean {
+    console.log( label.lineWidth );
+    if ( !glyph.depictable() || ( glyph.advance * label.scalingFactor > ( label.lineWidth ) && pen.x <= 0.0 ) ) {
       return false;
     }
 
-    return pen.x + ( glyph.advance + kerning ) * label.scalingFactor > lineWidth;
-  }
-
-  static typeset_align( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, bufferArrays: BufferArrays ) {
-    if ( alignment === Label.Alignment.Left ) {
-      return;
-    }
-
-    let penOffset = -pen.x;
-
-    if ( alignment == Label.Alignment.Center ) {
-      penOffset *= 0.5;
-    }
-
-    // Origin is expected to be in 'font face space' (not transformed)
-    for ( let i = begin; i != end; ++i ) {
-      bufferArrays.origins[ 3 * i + Typesetter.Components.x ] += penOffset;
-    }
-  }
-
-  static typeset_glyph(
-    bufferArrays: BufferArrays, index: number, pen: Vector3, glyph: Glyph, fontFace: FontFace, scalingFactor: number ) {
-    if ( pen.x < 0 ) {
-      console.error( `Could not typeset glyph because pen was at x position ${ pen.x }` );
-      return;
-    }
-
-    const padding = fontFace.glyphTexturePadding;
-    const extent = glyph.extent;
-    const textureOrigin = glyph.subTextureOrigin;
-    const textureExtent = glyph.subTextureExtent;
-
-    const penOrigin = new Vector3( glyph.bearing.x - padding.left, glyph.bearing.y - extent.y, 0 );
-    const penTangent = new Vector3( extent.width /* + ( padding.right + padding.left ) / 2, 0 */, 0 );
-    const penUp = new Vector3( 0, extent.height /*+ ( padding.top + padding.bottom ) / 2 */, 0 );
-    const texCoords = new Vector4( textureOrigin.x, textureOrigin.y, textureOrigin.x + textureExtent.x, textureOrigin.y + textureExtent.y );
-
-    // scale pens according to scaling factor
-    penOrigin.multiplyScalar( scalingFactor );
-    penTangent.multiplyScalar( scalingFactor );
-    penUp.multiplyScalar( scalingFactor );
-
-    this.setOrigin( index, bufferArrays, penOrigin.add( pen ) );
-    this.setTangent( index, bufferArrays, penTangent );
-    this.setUp( index, bufferArrays, penUp );
-    this.setTexChoords( index, bufferArrays, texCoords );
-  }
-
-  static getComponentOfBufferArray( index: number, component: Typesetter.Components, bufferArray: Float32Array ): number {
-    if ( 3 * index + component >= bufferArray.length ) {
-      console.error( `Index out of bounds for BufferArray` );
-      return 0;
-    }
-    return bufferArray[ 3 * index + component ];
-  };
-
-  static setOrigin( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x as number; i <= ( Typesetter.Components.z as number ); i++ )
-      bufferArrays.origins[ 3 * index + i ] = value.getComponent( i );
-  }
-
-  static setTangent( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.z; i++ )
-      bufferArrays.tangents[ 3 * index + i ] = value.getComponent( i );
-  }
-
-  static setUp( index: number, bufferArrays: BufferArrays, value: Vector3 ) {
-    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.z; i++ )
-      bufferArrays.ups[ 3 * index + i ] = value.getComponent( i );
-  }
-
-  static setTexChoords( index: number, bufferArrays: BufferArrays, value: Vector4 ) {
-    for ( let i = Typesetter.Components.x; i <= Typesetter.Components.w; i++ )
-      bufferArrays.texCoords[ 4 * index + i ] = value.getComponent( i );
+    return pen.x + ( glyph.advance + kerning ) * label.scalingFactor > ( label.lineWidth );
   }
 
   static alignLine( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, origins: Float32Array ) {

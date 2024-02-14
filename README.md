@@ -75,10 +75,10 @@ scene.add(cube); //attached label is automatically also added to scene
 - ```fontsize```: change font size (can be used as an alternativ to scaling)
 - ```lineAnchor```: set line anchor to baseline, descnedant, ascendant and others
 - ```lineFeed```: set line feed character (default is normal new line)
+- ```wrap```: set label to wrap mode in which line breaks are inserted if the lineWidth is exceeded
 - ```lineWidth```: set line width after which there is an automatic line feed
 - ```projected```: labels automatically turn to camera viewport when true
 - ```text```: change text content
-- ```wordwrap```
 
 ## Stuff included in the `scene.ts`
 <img width="796" alt="screenshot" src="public/screenshot_wip.png">

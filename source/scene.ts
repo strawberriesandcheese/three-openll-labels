@@ -288,6 +288,9 @@ as it trampled across western North America in the late Cretaceous period,
 some 69 million years ago. Despite its fierce appearance, 
 this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
+    const triceratopsWrapText =
+      `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore. `;
+
     bodyFont = new FontFaceLoader( loadingManager ).load( './fonts/cookierun/cookierun-regular' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
@@ -295,20 +298,21 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
     headerLabel.useUlrikeTypesetter = true;
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
-    // const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( headerColor ) );
-    // headingOldWayLabel.position.set( -4, 5, 2 );
 
     scene.add( headerLabel/*, headingOldWayLabel*/ );
     labels.push( headerLabel );
 
-    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( colors.infoColor ) );
+    infoLabel = new Label( triceratopsWrapText, bodyFont, new Color( colors.infoColor ) );
     labels.push( infoLabel );
+    infoLabel.useUlrikeTypesetter = true;
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
     scene.add( infoLabel );
     infoLabel.position.set( 0, 0.4, 4 );
-    infoLabel.lineAnchor = Label.LineAnchor.Center;
+    infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
+    infoLabel.wrap = true;
+    infoLabel.lineWidth = 30;
 
     //cameraControls.target = infoLabel.position.clone();
 
@@ -573,6 +577,9 @@ function addLabelGui() {
   new MultilineController( folder, infoLabel, 'text', 4 ).name( 'info text' );
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
+  folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
+  folder.add( infoLabel, 'lineWidth' ).name( 'line width' );
+  folder.add( infoLabel, 'alignment' );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 
