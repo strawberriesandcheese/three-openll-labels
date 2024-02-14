@@ -281,12 +281,14 @@ function addContent() {
   // ===== 🆎 STATIC LABELS =====
   {
     const triceratopsHeadingText = 'Triceratops horridus';
+    /*
     const triceratopsInfoText =
       `With its three sharp horns and spiky head plate, Triceratops 
 horridus must have been an intimidating presence 
 as it trampled across western North America in the late Cretaceous period, 
 some 69 million years ago. Despite its fierce appearance, 
 this famous ceratopsian, or horned dinosaur, was an herbivore. `;
+*/
 
     const triceratopsWrapText =
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore. `;
