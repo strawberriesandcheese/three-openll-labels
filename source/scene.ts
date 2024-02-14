@@ -578,8 +578,9 @@ function addLabelGui() {
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
-  folder.add( infoLabel, 'lineWidth' ).name( 'line width' );
-  folder.add( infoLabel, 'alignment' );
+  folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
+  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 0 ).max( 100 ).step( 5 );
+  folder.add( infoLabel, 'alignment', Label.Alignment );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 
