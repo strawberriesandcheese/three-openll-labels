@@ -1,7 +1,6 @@
-import { Vector2, Vector3, Vector4 } from "three";
+import { Vector2, Vector3 } from "three";
 import { Label } from "./Label";
 import { Glyph } from "./Glyph";
-import { FontFace } from "./FontFace";
 
 type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float32Array, texCoords: Float32Array; };
 
