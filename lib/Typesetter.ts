@@ -19,10 +19,6 @@ class Typesetter {
   // stores line information for every glyph based on index (maybe only store start of line indices?)
   protected _glyphLine: number[];
 
-  static typeset( label: Label, useMyWay: boolean ): BufferArrays {
-    return this.typesetMyWay( label );
-  }
-
   static initArrays( size: number ): BufferArrays {
     const origins = new Float32Array( size * 3 ).fill( 0 );
     const tangents = new Float32Array( size * 3 ).fill( 0 );
@@ -32,7 +28,7 @@ class Typesetter {
     return { origins, tangents, ups, texCoords };
   }
 
-  static typesetMyWay( label: Label ): BufferArrays {
+  static typeset( label: Label ): BufferArrays {
     let { origins, tangents, ups, texCoords } = this.initArrays( label.length );
 
     const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );

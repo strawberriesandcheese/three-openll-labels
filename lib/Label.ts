@@ -48,8 +48,6 @@ class Label extends Object3D {
   protected _debugMode = false;
   protected _aa = true;
 
-  public useUlrikeTypesetter = false;
-
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
 
@@ -135,7 +133,7 @@ class Label extends Object3D {
   }
 
   layout() {
-    const typesetResults = Typesetter.typeset( this, this.useUlrikeTypesetter );
+    const typesetResults = Typesetter.typeset( this );
     this.origins = typesetResults.origins;
     this.tangents = typesetResults.tangents;
     this.ups = typesetResults.ups;
@@ -211,11 +209,11 @@ class Label extends Object3D {
 
   /***
    * @param object Object3D to attach to, label will then change position and rotation based on this object
-   * @param offsetPosition A vector in world space that defines a position offset in world space for each axis
+   * @param anchorPosition A vector in world space that defines where the label is anchored
    * @param offsetRotationAxis A normalized vector in world space - can only be used together with angle!
    * @param offsetRotationAngle Angle in radians, expects float - can only be used together with axis!
    */
-  addTo( object: Object3D, offsetPosition?: Vector3, offsetRotationAxis?: Vector3, offsetRotationAngle?: number ) {
+  addTo( object: Object3D, anchorPosition?: Vector3, offsetRotationAxis?: Vector3, offsetRotationAngle?: number ) {
     if ( offsetRotationAngle && offsetRotationAxis ) {
       this.rotateOnAxis( offsetRotationAxis, offsetRotationAngle );
     } else if ( offsetRotationAngle && !offsetRotationAxis ) {
@@ -226,8 +224,8 @@ class Label extends Object3D {
     const ogRotation = this.getWorldQuaternion( new Quaternion() );
     object.add( this );
     this.setGlobalRotation( ogRotation );
-    if ( offsetPosition )
-      this.translateGlobal( offsetPosition );
+    if ( anchorPosition )
+      this.translateGlobal( anchorPosition );
   }
 
   public setGlobalRotation( targetRotation: Quaternion ) {
@@ -474,10 +472,10 @@ class Label extends Object3D {
      */
   set wrap( flag: boolean ) {
     this._wrap = flag;
+    this._needsLayout = true;
   }
   get wrap(): boolean {
     return this._wrap;
-    this._needsLayout = true;
   }
 
   /**

@@ -280,33 +280,32 @@ function addContent() {
 
   // ===== 🆎 STATIC LABELS =====
   {
-    const triceratopsHeadingText = 'Triceratops horridus';
-    /*
-    const triceratopsInfoText =
-      `With its three sharp horns and spiky head plate, Triceratops 
-horridus must have been an intimidating presence 
-as it trampled across western North America in the late Cretaceous period, 
-some 69 million years ago. Despite its fierce appearance, 
-this famous ceratopsian, or horned dinosaur, was an herbivore. `;
-*/
-
+    const triceratopsHeadingText = `Triceratops
+        	    horridus`;
     const triceratopsWrapText =
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
-    bodyFont = new FontFaceLoader( loadingManager ).load( './fonts/cookierun/cookierun-regular' );
+    const bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
-    headerLabel.useUlrikeTypesetter = true;
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
 
-    scene.add( headerLabel/*, headingOldWayLabel*/ );
+    scene.add( headerLabel );
     labels.push( headerLabel );
 
     infoLabel = new Label( triceratopsWrapText, bodyFont, new Color( colors.infoColor ) );
     labels.push( infoLabel );
-    infoLabel.useUlrikeTypesetter = true;
+
+    const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
+    sourceLabel;
+    sourceLabel.fontSize = 0.5;
+    sourceLabel.addTo( infoLabel );
+    sourceLabel.alignment = Label.Alignment.Center;
+    sourceLabel.translateGlobal( new Vector3( 0, -7, 0 ) );
+    labels.push( sourceLabel );
+
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
     scene.add( infoLabel );
@@ -315,8 +314,6 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
     infoLabel.alignment = Label.Alignment.Center;
     infoLabel.wrap = true;
     infoLabel.lineWidth = 30;
-
-    //cameraControls.target = infoLabel.position.clone();
 
     numberOfLabels = labels.length;
   }
@@ -396,10 +393,6 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
             ;
           };
         } );
-
-        //cameraControls.target = trike.position.clone();
-
-        //const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
 
         // now we create a label for every animation bone
         trikeBones!.forEach( ( bone ) => {
