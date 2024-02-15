@@ -36,6 +36,7 @@ import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { WorldInHandControls } from '@world-in-hand-controls/threejs-world-in-hand';
 
 import './style.css';
 
@@ -68,7 +69,7 @@ let palm: Group;
 let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
-let cameraControls: OrbitControls;
+let cameraControls: WorldInHandControls;
 //let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
@@ -90,6 +91,7 @@ let numberOfLabels = 0;
 
 let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
 
+let updateRequested = false;
 
 init();
 addControls();
@@ -98,6 +100,12 @@ addGui();
 addLabelGui();
 animate( 0 );
 
+function requestUpdate() {
+  if ( updateRequested ) return;
+
+  updateRequested = true;
+  requestAnimationFrame( animate );
+}
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -112,7 +120,8 @@ function init() {
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
-    cameraControls = new OrbitControls( camera, canvas );
+    cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
+    cameraControls.addEventListener( 'change', requestUpdate );
   }
 
 }
@@ -432,11 +441,11 @@ function addContent() {
 }
 
 function addControls() {
-  cameraControls.enableDamping = true;
-  cameraControls.autoRotate = false;
-  cameraControls.maxDistance = 30;
-  cameraControls.minDistance = 1;
-  cameraControls.maxPolarAngle = 1.5;
+  //cameraControls.enableDamping = true;
+  //cameraControls.autoRotate = false;
+  //cameraControls.maxDistance = 30;
+  //cameraControls.minDistance = 1;
+  //cameraControls.maxPolarAngle = 1.5;
   cameraControls.update();
 
   /*
@@ -495,8 +504,8 @@ function addGui() {
   helpersFolder.add( directionalLightHelper, 'visible' ).name( 'directionalLight' );
   helpersFolder.add( debugSettings, 'logEnabled' ).name( 'logging' );
 
-  const cameraFolder = gui.addFolder( 'Camera' );
-  cameraFolder.add( cameraControls, 'autoRotate' );
+  //const cameraFolder = gui.addFolder( 'Camera' );
+  //cameraFolder.add( cameraControls, 'autoRotate' );
 
   // persist GUI state in local storage on changes
   gui.onFinishChange( () => {
@@ -668,6 +677,7 @@ function debugLog( enabled: boolean ) {
 }
 
 function animate( timeStamp: number ) {
+  updateRequested = false;
   requestAnimationFrame( animate );
 
   if ( lastFrame === undefined )
@@ -680,15 +690,22 @@ function animate( timeStamp: number ) {
   if ( trike )
     mixer.update( deltaTime / 1000 );
 
-  cameraControls.update();
+  //cameraControls.update();
 
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
   }
 
+  if ( cameraControls instanceof WorldInHandControls ) {
+    renderer.setRenderTarget( cameraControls.navigationRenderTarget );
+    renderer.render( scene, camera );
+  }
+  renderer.setRenderTarget( null );
+  renderer.render( scene, camera );
+
   debugLog( debugSettings.logEnabled );
 
-  renderer.render( scene, camera );
+  cameraControls.update();
 
 }
