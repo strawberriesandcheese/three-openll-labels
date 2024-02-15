@@ -8,76 +8,119 @@ class FontFaceLoader extends Loader {
 
   constructor( manager?: LoadingManager ) {
 
-    super( manager );
+    manager ? super( manager ) : super();
 
   }
 
-  load( fontName: string, onLoad?: ( ( data: string | ArrayBuffer ) => void ) | undefined, onProgress?: ( ( event: ProgressEvent<EventTarget> ) => void ) | undefined, onError?: ( ( err: unknown ) => void ) | undefined ): FontFace {
+  load( fontName: string, onLoad?: ( ( data: FontFace ) => void ), onProgress?: ( ( event: ProgressEvent<EventTarget> ) => void ), onError?: ( ( err: unknown ) => void ) ): FontFace {
+
+    const descString = `${ fontName }.fnt`;
+    const atlasString = `${ fontName }.png`;
+
+    return ( this.loadFromUrls( descString, atlasString, onLoad, onProgress, onError ) );
+  }
+
+  loadFromUrls( descriptionUrl: string, atlasUrl: string, onLoad?: ( ( data: FontFace ) => void ), onProgress?: ( ( event: ProgressEvent<EventTarget> ) => void ), onError?: ( ( err: unknown ) => void ) ): FontFace {
+    Cache.enabled = true;
 
     let fontFace = new FontFace;
 
-    Cache.enabled = true;
     const descriptionLoader = new FileLoader( this.manager );
+    descriptionLoader.setPath( this.path );
+    descriptionLoader.setRequestHeader( this.requestHeader );
+    descriptionLoader.setWithCredentials( this.withCredentials );
     descriptionLoader.load(
-      `${ fontName }.fnt`,
-      ( data ) => {
-        let text = '';
-        text = data.toString();
+      descriptionUrl,
+      ( descData ) => {
+        try {
 
-        const lines = text.split( '\n' );
-        let status = true;
+          let status = this.processDescription( descData, fontFace );
+          if ( status !== true )
+            throw new Error( 'Description file could not be parsed correctly.' );
 
-        for ( const line of lines ) {
-          let attributes = line.split( ' ' );
-          const identifier = attributes[ 0 ];
-          attributes = attributes.slice( 1 );
+          const texture = new TextureLoader( this.manager )
+            .setPath( this.path )
+            .setRequestHeader( this.requestHeader )
+            .setWithCredentials( this.withCredentials )
+            .load( atlasUrl,
+              () => {
+                fontFace.glyphTexture = texture;
+                if ( status === true )
+                  fontFace.ready = true;
+                if ( onLoad )
+                  onLoad( fontFace );
+              }, onProgress, onError );
 
-          switch ( identifier ) {
-            case 'info':
-              status = this.processInfo( attributes, fontFace );
-              break;
+        } catch ( e ) {
 
-            case 'common':
-              status = this.processCommon( attributes, fontFace );
-              break;
-
-            case 'char':
-              status = this.processChar( attributes, fontFace );
-              break;
-
-            case 'kerning':
-              this.processKerning( attributes, fontFace );
-              break;
-
-            default:
-              break;
+          if ( onError ) {
+            onError( e );
+          } else {
+            console.error( e );
           }
+          this.manager.itemError( descriptionUrl );
 
-          if ( status === false ) {
-            break;
-          }
         }
-        /*
-        this.findAscentAndDescentIfNoneProvided( fontFace, fontFace.size );
-        if ( fontFace.size <= 0.0 ) {
-          console.warn( `Expected fontFace.size to be greater than 0, given ${ fontFace.size }` );
-        }
-        */
-        fontFace.ready = status;
-      },
-      // onProgress callback
-      ( xhr ) => {
-        console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-      },
-      // onError callback
-      ( err ) => {
-        console.error( `Could not load font description from ${ fontName }.fnt` );
-      } );
-
-    const texture = new TextureLoader( this.manager ).load( `${ fontName }.png` );
-    fontFace.glyphTexture = texture;
+      }, onProgress, onError );
 
     return fontFace;
+  }
+
+  loadFromAPI( url: string ): FontFace {
+    let path = url;
+    const descString = '/fontdescription';
+    const atlasString = '/distancefield';
+    if ( url.endsWith( descString ) || url.endsWith( atlasString ) ) {
+      const lastIndex = url.lastIndexOf( '/' );
+      path = url.substring( 0, lastIndex );
+    }
+    return this.loadFromUrls( path + descString, path + atlasString );
+  }
+
+  protected processDescription( data: string | ArrayBuffer, fontFace: FontFace ): boolean {
+    let text = '';
+    text = data.toString();
+
+    const lines = text.split( '\n' );
+    let status = true;
+
+    for ( const line of lines ) {
+      let attributes = line.split( ' ' );
+      const identifier = attributes[ 0 ];
+      attributes = attributes.slice( 1 );
+
+      switch ( identifier ) {
+        case 'info':
+          status = this.processInfo( attributes, fontFace );
+          break;
+
+        case 'common':
+          status = this.processCommon( attributes, fontFace );
+          break;
+
+        case 'char':
+          status = this.processChar( attributes, fontFace );
+          break;
+
+        case 'kerning':
+          this.processKerning( attributes, fontFace );
+          break;
+
+        default:
+          break;
+      }
+
+      if ( status === false ) {
+        break;
+      }
+    }
+    /*
+    this.findAscentAndDescentIfNoneProvided( fontFace, fontFace.size );
+    if ( fontFace.size <= 0.0 ) {
+      console.warn( `Expected fontFace.size to be greater than 0, given ${ fontFace.size }` );
+    }
+    */
+    return status;
   }
 
   /**

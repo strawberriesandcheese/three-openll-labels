@@ -280,37 +280,40 @@ function addContent() {
 
   // ===== 🆎 STATIC LABELS =====
   {
-    const triceratopsHeadingText = 'Triceratops horridus';
-    const triceratopsInfoText =
-      `With its three sharp horns and spiky head plate, Triceratops 
-horridus must have been an intimidating presence 
-as it trampled across western North America in the late Cretaceous period, 
-some 69 million years ago. Despite its fierce appearance, 
-this famous ceratopsian, or horned dinosaur, was an herbivore. `;
+    const triceratopsHeadingText = `Triceratops
+        	    horridus`;
+    const triceratopsWrapText =
+      `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore. `;
 
-    bodyFont = new FontFaceLoader( loadingManager ).load( './fonts/cookierun/cookierun-regular' );
+    const bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
-    headerLabel.useUlrikeTypesetter = true;
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
-    // const headingOldWayLabel = new Label( triceratopsHeadingText, headingFont, new Color( headerColor ) );
-    // headingOldWayLabel.position.set( -4, 5, 2 );
 
-    scene.add( headerLabel/*, headingOldWayLabel*/ );
+    scene.add( headerLabel );
     labels.push( headerLabel );
 
-    infoLabel = new Label( triceratopsInfoText, bodyFont, new Color( colors.infoColor ) );
+    infoLabel = new Label( triceratopsWrapText, bodyFont, new Color( colors.infoColor ) );
     labels.push( infoLabel );
+
+    const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
+    sourceLabel;
+    sourceLabel.fontSize = 0.5;
+    sourceLabel.addTo( infoLabel );
+    sourceLabel.alignment = Label.Alignment.Center;
+    sourceLabel.translateGlobal( new Vector3( 0, -7, 0 ) );
+    labels.push( sourceLabel );
+
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
     scene.add( infoLabel );
     infoLabel.position.set( 0, 0.4, 4 );
-    infoLabel.lineAnchor = Label.LineAnchor.Center;
+    infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
-
-    //cameraControls.target = infoLabel.position.clone();
+    infoLabel.wrap = true;
+    infoLabel.lineWidth = 30;
 
     numberOfLabels = labels.length;
   }
@@ -390,10 +393,6 @@ this famous ceratopsian, or horned dinosaur, was an herbivore. `;
             ;
           };
         } );
-
-        //cameraControls.target = trike.position.clone();
-
-        //const pride = [ new Color( 0xFFFFFF ), new Color( 0xFFAFC7 ), new Color( 0x73D7EE ), new Color( 0x613915 ), new Color( 0x000000 ), new Color( 0xE50000 ), new Color( 0xFF8D00 ), new Color( 0xFFEE00 ), new Color( 0x028121 ), new Color( 0x004CFF ), new Color( 0x760088 ) ];
 
         // now we create a label for every animation bone
         trikeBones!.forEach( ( bone ) => {
@@ -573,6 +572,10 @@ function addLabelGui() {
   new MultilineController( folder, infoLabel, 'text', 4 ).name( 'info text' );
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
+  folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
+  folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
+  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 0 ).max( 100 ).step( 5 );
+  folder.add( infoLabel, 'alignment', Label.Alignment );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 

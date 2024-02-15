@@ -27,8 +27,9 @@ class Glyph {
 
   /**
    * Check if a glyph is depictable/renderable. If the glyph's sub texture vertical or horizontal extent is zero the
-   * glyph does not need to be depicted/rendered. E.g., spaces, line feeds, other control sequences as well as
+   * glyph does not need to be depicted/rendered. E.g. line feeds, other control sequences as well as
    * unknown glyphs do not need to be processed for rendering.
+   * Spaces are depictable (contrary to popular belief)
    * @returns - True if the glyph needs to be depicted/rendered.
    */
   depictable(): boolean {
