@@ -45,9 +45,6 @@ class Typesetter {
       let glyph = label.textGlyphs[ i ];
       const lineHeight = label.fontFace.lineHeight;
 
-      const spaceAt = ( index: number ): boolean => {
-        return ( index < label.length - 1 ? isSpace( label.textGlyphs[ index ].codepoint ) : false );
-      };
       const newWordAt = ( index: number ): boolean => {
         return ( index < label.length - 1 ? ( !label.textGlyphs[ index ].depictable() || isDelimiter( label.textGlyphs[ index ].codepoint ) ) : false );
       };
