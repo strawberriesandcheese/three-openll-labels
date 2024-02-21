@@ -283,7 +283,7 @@ function addContent() {
     const triceratopsHeadingText = `Triceratops
         	    horridus`;
     const triceratopsWrapText =
-      `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore. `;
+      `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.`;
 
     const bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
@@ -303,7 +303,7 @@ function addContent() {
     sourceLabel.fontSize = 0.5;
     sourceLabel.addTo( infoLabel );
     sourceLabel.alignment = Label.Alignment.Center;
-    sourceLabel.translateGlobal( new Vector3( 0, -7, 0 ) );
+    sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
     labels.push( sourceLabel );
 
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
