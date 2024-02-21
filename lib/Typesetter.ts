@@ -5,7 +5,7 @@ import { Glyph } from "./Glyph";
 type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float32Array, texCoords: Float32Array; };
 
 // Setup common delimiters for wordwrapping
-const delimiters = [ '\x0A', ' ', ',', '.', '-', '/', '(', ')', '[', ']', '<', '>', '.' ];
+const delimiters = [ '\x0A', ' ', '-', '/', '(', ')', '[', ']', '<', '>' ];
 const isDelimiter = ( codepoint: number ): boolean => {
   return delimiters.includes( String.fromCodePoint( codepoint ) );
 };
@@ -49,7 +49,7 @@ class Typesetter {
         return ( index < label.length - 1 ? isSpace( label.textGlyphs[ index ].codepoint ) : false );
       };
       const newWordAt = ( index: number ): boolean => {
-        return ( index < label.length - 1 ? ( !label.textGlyphs[ index ].depictable() || spaceAt( index ) ) : false );
+        return ( index < label.length - 1 ? ( !label.textGlyphs[ index ].depictable() || isDelimiter( label.textGlyphs[ index ].codepoint ) ) : false );
       };
 
       // first let's check if we reached a line break
