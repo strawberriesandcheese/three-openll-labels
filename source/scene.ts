@@ -285,7 +285,7 @@ function addContent() {
     const triceratopsWrapText =
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.`;
 
-    const bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
+    bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
