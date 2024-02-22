@@ -430,39 +430,6 @@ function addContent() {
 }
 
 function addControls() {
-  //cameraControls.enableDamping = true;
-  //cameraControls.autoRotate = false;
-  //cameraControls.maxDistance = 30;
-  //cameraControls.minDistance = 1;
-  //cameraControls.maxPolarAngle = 1.5;
-  //cameraControls.update();
-
-  /*
-  dragControls = new DragControls( [ trike ], camera, renderer.domElement );
-  //dragControls.transformGroup = true
-  dragControls.addEventListener( 'hoveron', ( event ) => {
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'orange' );
-  } );
-  dragControls.addEventListener( 'hoveroff', ( event ) => {
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-  } );
-  dragControls.addEventListener( 'dragstart', ( event ) => {
-    cameraControls.enabled = false;
-    trikeAnimationSettings.play = false;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 0.7;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
-  } );
-  dragControls.addEventListener( 'dragend', ( event ) => {
-    cameraControls.enabled = true;
-    trikeAnimationSettings.play = true;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 1;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
-  } );
-  dragControls.enabled = false;
-  */
-
   // Full screen
   window.addEventListener( 'dblclick', ( event ) => {
     if ( event.target === canvas ) {
