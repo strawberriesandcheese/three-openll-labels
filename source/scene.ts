@@ -30,7 +30,7 @@ import {
   WebGLRenderer,
 } from 'three';
 //import { DragControls } from 'three/examples/jsm/controls/DragControls';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
@@ -100,12 +100,14 @@ addGui();
 addLabelGui();
 animate( 0 );
 
+/*
 function requestUpdate() {
   if ( updateRequested ) return;
 
   updateRequested = true;
   requestAnimationFrame( animate );
 }
+*/
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -121,7 +123,10 @@ function init() {
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
-    cameraControls.addEventListener( 'change', requestUpdate );
+    cameraControls.allowRotationBelowGroundPlane = false; // default: true
+    cameraControls.useBottomOfBoundingBoxAsGroundPlane = false; // default: true
+    cameraControls.rotateAroundMousePosition = false; // default: false
+    //cameraControls.addEventListener( 'change', requestUpdate );
   }
 
 }
@@ -277,7 +282,6 @@ function addContent() {
         const palmScale = 0.02;
         palm.scale.set( palmScale, palmScale, palmScale );
         palm.translateX( 1.6 );
-        //palms.translateY( 0.3 );
         palm.translateZ( -5 );
         palm.rotateY( - Math.PI / 3 );
         scene.add( palm );
@@ -349,7 +353,7 @@ function addContent() {
     axesHelper.visible = false;
     scene.add( axesHelper );
 
-    pointLightHelper = new PointLightHelper( pointLight, undefined, 'orange' );
+    pointLightHelper = new PointLightHelper( pointLight, 1, 'orange' );
     pointLightHelper.visible = false;
     scene.add( pointLightHelper );
 
@@ -446,7 +450,7 @@ function addControls() {
   //cameraControls.maxDistance = 30;
   //cameraControls.minDistance = 1;
   //cameraControls.maxPolarAngle = 1.5;
-  cameraControls.update();
+  //cameraControls.update();
 
   /*
   dragControls = new DragControls( [ trike ], camera, renderer.domElement );
@@ -525,6 +529,7 @@ function addGui() {
 
   // open modal with sources
   const showSources = () => {
+    /*
     const dialog = document.querySelector( 'dialog' );
     if ( dialog ) {
       dialog.showModal();
@@ -535,6 +540,7 @@ function addGui() {
         } );
       }
     }
+    */
   };
 
   gui.add( { showSources }, 'showSources' ).name( 'Show Resource Attributions' );
@@ -689,8 +695,6 @@ function animate( timeStamp: number ) {
   drawCallPanel.update( loggingInfo.drawCalls, 150 );
   if ( trike )
     mixer.update( deltaTime / 1000 );
-
-  //cameraControls.update();
 
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
