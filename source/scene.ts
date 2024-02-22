@@ -91,23 +91,12 @@ let numberOfLabels = 0;
 
 let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
 
-let updateRequested = false;
-
 init();
 addControls();
 addContent();
 addGui();
 addLabelGui();
 animate( 0 );
-
-/*
-function requestUpdate() {
-  if ( updateRequested ) return;
-
-  updateRequested = true;
-  requestAnimationFrame( animate );
-}
-*/
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -121,13 +110,13 @@ function init() {
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
-    console.log( renderer );
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
+    camera.position.set( 0, 10, 20 );
+    camera.lookAt( new Vector3( 0, 0, 0 ) );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
     cameraControls.allowRotationBelowGroundPlane = false; // default: true
     cameraControls.useBottomOfBoundingBoxAsGroundPlane = false; // default: true
     cameraControls.rotateAroundMousePosition = false; // default: false
-    //cameraControls.addEventListener( 'change', requestUpdate );
   }
 
 }
@@ -146,6 +135,8 @@ function addContent() {
     };
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
+      //@ts-expect-error because types seem to be incomplete
+      scene.dispatchEvent( { type: 'change' } );
     };
     loadingManager.onError = ( error ) => {
       console.log( '❌ error while loading:', error );
@@ -332,11 +323,6 @@ function addContent() {
     numberOfLabels = labels.length;
   }
 
-  // ===== 🎥 CAMERA =====
-  {
-    camera.position.set( 0, 10, 20 );
-  }
-
   // ===== 🌎 ENVIRONMENT MAP =====
   {
     const loader = new RGBELoader( loadingManager );
@@ -443,7 +429,6 @@ function addContent() {
         console.error( error );
       } );
   }
-  scene.dispatchEvent( { type: 'resize' } );
 }
 
 function addControls() {
@@ -686,7 +671,6 @@ function debugLog( enabled: boolean ) {
 }
 
 function animate( timeStamp: number ) {
-  updateRequested = false;
   requestAnimationFrame( animate );
 
   if ( lastFrame === undefined )
