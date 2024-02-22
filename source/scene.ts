@@ -29,8 +29,6 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-//import { DragControls } from 'three/examples/jsm/controls/DragControls';
-//import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
@@ -114,9 +112,9 @@ function init() {
     camera.position.set( 0, 10, 20 );
     camera.lookAt( new Vector3( 0, 0, 0 ) );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
-    cameraControls.allowRotationBelowGroundPlane = false; // default: true
-    cameraControls.useBottomOfBoundingBoxAsGroundPlane = false; // default: true
-    cameraControls.rotateAroundMousePosition = false; // default: false
+    cameraControls.allowRotationBelowGroundPlane = false;
+    cameraControls.useBottomOfBoundingBoxAsGroundPlane = false;
+    cameraControls.rotateAroundMousePosition = false;
   }
 
 }
@@ -518,7 +516,6 @@ function addGui() {
 
   // open modal with sources
   const showSources = () => {
-    /*
     const dialog = document.querySelector( 'dialog' );
     if ( dialog ) {
       dialog.showModal();
@@ -529,7 +526,6 @@ function addGui() {
         } );
       }
     }
-    */
   };
 
   gui.add( { showSources }, 'showSources' ).name( 'Show Resource Attributions' );
