@@ -135,7 +135,7 @@ function addContent() {
     };
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
-      //@ts-expect-error because types seem to be incomplete
+      //@ts-expect-error
       scene.dispatchEvent( { type: 'change' } );
     };
     loadingManager.onError = ( error ) => {
@@ -469,6 +469,7 @@ function addControls() {
   window.addEventListener( 'dblclick', ( event ) => {
     if ( event.target === canvas ) {
       toggleFullScreen( canvas );
+      //@ts-expect-error
       scene.dispatchEvent( { type: 'resize' } );
     }
   } );
@@ -686,6 +687,7 @@ function animate( timeStamp: number ) {
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
+    //@ts-expect-error
     scene.dispatchEvent( { type: 'resize' } );
   }
 
