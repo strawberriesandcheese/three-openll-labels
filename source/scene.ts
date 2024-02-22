@@ -29,13 +29,12 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-//import { DragControls } from 'three/examples/jsm/controls/DragControls';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import Stats from 'three/examples/jsm/libs/stats.module';
 import { toggleFullScreen } from './helpers/fullscreen';
 import { resizeRendererToDisplaySize } from './helpers/responsiveness';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { WorldInHandControls } from '@world-in-hand-controls/threejs-world-in-hand';
 
 import './style.css';
 
@@ -68,7 +67,7 @@ let palm: Group;
 let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
-let cameraControls: OrbitControls;
+let cameraControls: WorldInHandControls;
 //let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
@@ -90,14 +89,12 @@ let numberOfLabels = 0;
 
 let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
 
-
 init();
 addControls();
 addContent();
 addGui();
 addLabelGui();
 animate( 0 );
-
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -112,7 +109,12 @@ function init() {
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
-    cameraControls = new OrbitControls( camera, canvas );
+    camera.position.set( 0, 10, 20 );
+    camera.lookAt( new Vector3( 0, 0, 0 ) );
+    cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
+    cameraControls.allowRotationBelowGroundPlane = false;
+    cameraControls.useBottomOfBoundingBoxAsGroundPlane = false;
+    cameraControls.rotateAroundMousePosition = false;
   }
 
 }
@@ -131,6 +133,8 @@ function addContent() {
     };
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
+      //@ts-expect-error
+      scene.dispatchEvent( { type: 'change' } );
     };
     loadingManager.onError = ( error ) => {
       console.log( '❌ error while loading:', error );
@@ -268,7 +272,6 @@ function addContent() {
         const palmScale = 0.02;
         palm.scale.set( palmScale, palmScale, palmScale );
         palm.translateX( 1.6 );
-        //palms.translateY( 0.3 );
         palm.translateZ( -5 );
         palm.rotateY( - Math.PI / 3 );
         scene.add( palm );
@@ -318,11 +321,6 @@ function addContent() {
     numberOfLabels = labels.length;
   }
 
-  // ===== 🎥 CAMERA =====
-  {
-    camera.position.set( 0, 10, 20 );
-  }
-
   // ===== 🌎 ENVIRONMENT MAP =====
   {
     const loader = new RGBELoader( loadingManager );
@@ -340,7 +338,7 @@ function addContent() {
     axesHelper.visible = false;
     scene.add( axesHelper );
 
-    pointLightHelper = new PointLightHelper( pointLight, undefined, 'orange' );
+    pointLightHelper = new PointLightHelper( pointLight, 1, 'orange' );
     pointLightHelper.visible = false;
     scene.add( pointLightHelper );
 
@@ -432,43 +430,12 @@ function addContent() {
 }
 
 function addControls() {
-  cameraControls.enableDamping = true;
-  cameraControls.autoRotate = false;
-  cameraControls.maxDistance = 30;
-  cameraControls.minDistance = 1;
-  cameraControls.maxPolarAngle = 1.5;
-  cameraControls.update();
-
-  /*
-  dragControls = new DragControls( [ trike ], camera, renderer.domElement );
-  //dragControls.transformGroup = true
-  dragControls.addEventListener( 'hoveron', ( event ) => {
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'orange' );
-  } );
-  dragControls.addEventListener( 'hoveroff', ( event ) => {
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-  } );
-  dragControls.addEventListener( 'dragstart', ( event ) => {
-    cameraControls.enabled = false;
-    trikeAnimationSettings.play = false;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 0.7;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
-  } );
-  dragControls.addEventListener( 'dragend', ( event ) => {
-    cameraControls.enabled = true;
-    trikeAnimationSettings.play = true;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).emissive.set( 'black' );
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).opacity = 1;
-    ( ( event.object as THREE.Mesh ).material as MeshLambertMaterial ).needsUpdate = true;
-  } );
-  dragControls.enabled = false;
-  */
-
   // Full screen
   window.addEventListener( 'dblclick', ( event ) => {
     if ( event.target === canvas ) {
       toggleFullScreen( canvas );
+      //@ts-expect-error
+      scene.dispatchEvent( { type: 'resize' } );
     }
   } );
 }
@@ -495,8 +462,8 @@ function addGui() {
   helpersFolder.add( directionalLightHelper, 'visible' ).name( 'directionalLight' );
   helpersFolder.add( debugSettings, 'logEnabled' ).name( 'logging' );
 
-  const cameraFolder = gui.addFolder( 'Camera' );
-  cameraFolder.add( cameraControls, 'autoRotate' );
+  //const cameraFolder = gui.addFolder( 'Camera' );
+  //cameraFolder.add( cameraControls, 'autoRotate' );
 
   // persist GUI state in local storage on changes
   gui.onFinishChange( () => {
@@ -680,15 +647,22 @@ function animate( timeStamp: number ) {
   if ( trike )
     mixer.update( deltaTime / 1000 );
 
-  cameraControls.update();
-
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
+    //@ts-expect-error
+    scene.dispatchEvent( { type: 'resize' } );
   }
+
+  if ( cameraControls instanceof WorldInHandControls ) {
+    renderer.setRenderTarget( cameraControls.navigationRenderTarget );
+    renderer.render( scene, camera );
+  }
+  renderer.setRenderTarget( null );
+  renderer.render( scene, camera );
 
   debugLog( debugSettings.logEnabled );
 
-  renderer.render( scene, camera );
+  cameraControls.update();
 
 }
