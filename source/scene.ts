@@ -121,6 +121,7 @@ function init() {
     scene = new Scene();
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
+    console.log( renderer );
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
     cameraControls.allowRotationBelowGroundPlane = false; // default: true
@@ -442,6 +443,7 @@ function addContent() {
         console.error( error );
       } );
   }
+  scene.dispatchEvent( { type: 'resize' } );
 }
 
 function addControls() {
@@ -482,6 +484,7 @@ function addControls() {
   window.addEventListener( 'dblclick', ( event ) => {
     if ( event.target === canvas ) {
       toggleFullScreen( canvas );
+      scene.dispatchEvent( { type: 'resize' } );
     }
   } );
 }
@@ -699,6 +702,7 @@ function animate( timeStamp: number ) {
   if ( resizeRendererToDisplaySize( renderer ) ) {
     camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
+    scene.dispatchEvent( { type: 'resize' } );
   }
 
   if ( cameraControls instanceof WorldInHandControls ) {
