@@ -447,9 +447,6 @@ function addGui() {
   const envFolder = gui.addFolder( 'Environment' );
   envFolder.add( plane, 'visible' ).name( 'plane' );
 
-  // const controlsFolder = gui.addFolder( 'Controls' );
-  // controlsFolder.add( dragControls, 'enabled' ).name( 'drag controls' );
-
   const lightsFolder = gui.addFolder( 'Lights' );
   lightsFolder.add( pointLight, 'visible' ).name( 'point light' );
   lightsFolder.add( directionalLight, 'visible' ).name( 'directional light' );
@@ -461,9 +458,6 @@ function addGui() {
   helpersFolder.add( pointLightHelper, 'visible' ).name( 'pointLight' );
   helpersFolder.add( directionalLightHelper, 'visible' ).name( 'directionalLight' );
   helpersFolder.add( debugSettings, 'logEnabled' ).name( 'logging' );
-
-  //const cameraFolder = gui.addFolder( 'Camera' );
-  //cameraFolder.add( cameraControls, 'autoRotate' );
 
   // persist GUI state in local storage on changes
   gui.onFinishChange( () => {
