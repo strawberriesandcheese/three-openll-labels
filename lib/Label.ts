@@ -47,6 +47,7 @@ class Label extends Object3D {
 
   protected _debugMode = false;
   protected _aa = true;
+  protected _frustumCulled = true;
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -85,6 +86,7 @@ class Label extends Object3D {
     let geometry = new InstancedBufferGeometry();
     let material = this.createShaderMaterial( new Texture, new Color );
     this.mesh = new Mesh( geometry, material );
+    this.mesh.frustumCulled = this.frustumCulled;
 
     this.fontFace = fontFace;
     this._color = color;
@@ -523,6 +525,16 @@ class Label extends Object3D {
       return;
     this._aa = aa;
     this.updateAntialiasing();
+  }
+
+  //@ts-expect-error since three.js does not offer setter and getter
+  get frustumCulled(): boolean {
+    return this._frustumCulled;
+  }
+  set frustumCulled( frustumCulled: boolean ) {
+    this._frustumCulled = frustumCulled;
+    if ( this.mesh )
+      this.mesh.frustumCulled = frustumCulled;
   }
 }
 
