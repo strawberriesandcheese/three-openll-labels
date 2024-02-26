@@ -41,6 +41,7 @@
     "vite-plugin-dts": "^3.7.2"
   },
   "dependencies": {
+    "@world-in-hand-controls/threejs-world-in-hand": "^0.0.3",
     "three": "^0.158.0"
   }
 }
