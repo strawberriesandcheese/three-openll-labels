@@ -305,6 +305,7 @@ function addContent() {
     sourceLabel.alignment = Label.Alignment.Center;
     sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
     labels.push( sourceLabel );
+    sourceLabel.frustumCulled = false;
 
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
