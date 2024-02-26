@@ -28,7 +28,7 @@ class Label extends Object3D {
 
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
-  _mesh: Mesh;
+  protected _mesh: Mesh;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
@@ -47,7 +47,7 @@ class Label extends Object3D {
 
   protected _debugMode = false;
   protected _aa = true;
-  protected _frustumCulled = true;
+  protected _frustumCulledChanged = false;
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -93,9 +93,16 @@ class Label extends Object3D {
   }
 
   setOnBeforeRender( mesh: Mesh ) {
-    // we need to make sure we have an actual font face ready before starting to work with it
     mesh.onBeforeRender =
       ( renderer: Renderer, scene: Scene, camera: Camera ) => {
+        // first we need to check if our parents frustum culling setting has changed
+        this._frustumCulledChanged = this.frustumCulled !== this.mesh.frustumCulled;
+        if ( this._frustumCulledChanged ) {
+          console.log( this.frustumCulled, this.mesh.frustumCulled );
+          this.mesh.frustumCulled = this.frustumCulled;
+        }
+
+        // we need to make sure we have an actual font face ready before starting to work with it
         if ( this._textChanged && this.fontFace.ready ) {
           this.updateText();
           this._needsLayout = true;
@@ -525,16 +532,6 @@ class Label extends Object3D {
       return;
     this._aa = aa;
     this.updateAntialiasing();
-  }
-
-  //@ts-expect-error since three.js does not offer setter and getter
-  get frustumCulled(): boolean {
-    return this._frustumCulled;
-  }
-  set frustumCulled( frustumCulled: boolean ) {
-    this._frustumCulled = frustumCulled;
-    if ( this.mesh )
-      this.mesh.frustumCulled = frustumCulled;
   }
 }
 
