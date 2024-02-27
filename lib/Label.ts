@@ -5,12 +5,24 @@ import {
   DoubleSide,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
+  LineBasicMaterial,
+  Material,
   Mesh,
+  MeshBasicMaterial,
+  MeshDepthMaterial,
+  MeshDistanceMaterial,
+  MeshLambertMaterial,
+  MeshMatcapMaterial,
+  MeshPhongMaterial,
+  MeshStandardMaterial,
+  MeshToonMaterial,
   Object3D,
+  PointsMaterial,
   Quaternion,
   Renderer,
   Scene,
   ShaderMaterial,
+  SpriteMaterial,
   Texture,
   TypedArray,
   Vector3,
@@ -20,8 +32,28 @@ import { FontFace } from './FontFace';
 
 import vertexShader from './shaders/font.vert?raw';
 import fragmentShader from './shaders/font.frag?raw';
+
+import font_pars_vertex from './ShaderChunks/font_pars_vertex.glsl?raw';
+import font_vertex from './ShaderChunks/font_vertex.glsl?raw';
+
+import font_pars_frag from './ShaderChunks/font_pars_frag.glsl?raw';
+import font_frag from './ShaderChunks/font_frag.glsl?raw';
+
 import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
+
+type SupportedMaterial =
+  LineBasicMaterial |
+  MeshBasicMaterial |
+  MeshDepthMaterial |
+  MeshDistanceMaterial |
+  MeshLambertMaterial |
+  MeshMatcapMaterial |
+  MeshPhongMaterial |
+  MeshStandardMaterial |
+  MeshToonMaterial |
+  PointsMaterial |
+  SpriteMaterial;
 
 
 class Label extends Object3D {
@@ -29,6 +61,7 @@ class Label extends Object3D {
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
   protected _mesh: Mesh;
+  protected _material: SupportedMaterial;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
@@ -72,7 +105,7 @@ class Label extends Object3D {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ) ) {
+  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ), material = new MeshStandardMaterial() ) {
     super();
 
     this.text = text;
@@ -84,8 +117,44 @@ class Label extends Object3D {
     this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
     let geometry = new InstancedBufferGeometry();
-    let material = this.createShaderMaterial( new Texture, new Color );
-    this.mesh = new Mesh( geometry, material );
+    let material2 = this.createShaderMaterial( new Texture, new Color );
+    this._material = material;
+
+    this._material.onBeforeCompile = ( shader ) => {
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <common>',
+        '#include <common>' + font_pars_vertex
+      );
+
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <begin_vertex>',
+        font_vertex
+      );
+
+      //console.log( shader.fragmentShader );
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <common>',
+        '#include <common>' + font_pars_frag
+      );
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        'vec4 diffuseColor = vec4( diffuse, opacity );',
+        `
+        #include <clipping_planes_fragment>
+        vec4 diffuseColor = vec4( color, opacity );
+        `
+      );
+
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <dithering_fragment>',
+        '#include <dithering_fragment>' + font_frag
+      );
+
+      console.log( shader.fragmentShader );
+      material.userData.shader = shader;
+    };
+    this.mesh = new Mesh( geometry, this._material );
     this.mesh.frustumCulled = this.frustumCulled;
 
     this.fontFace = fontFace;
@@ -98,7 +167,7 @@ class Label extends Object3D {
         // first we need to check if our parents frustum culling setting has changed
         this._frustumCulledChanged = this.frustumCulled !== this.mesh.frustumCulled;
         if ( this._frustumCulledChanged ) {
-          console.log( this.frustumCulled, this.mesh.frustumCulled );
+          //console.log( this.frustumCulled, this.mesh.frustumCulled );
           this.mesh.frustumCulled = this.frustumCulled;
         }
 
@@ -170,33 +239,42 @@ class Label extends Object3D {
   }
 
   updateColor() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.color.value = this.color;
+    // if ( !this.material.uniforms )
+    //   return;
+    // this.material.uniforms.color.value = this.color;
+    //this._material.color = this.color;
     // following line might not be necessary
     //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateMap() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.map.value = this.fontFace.glyphTexture;
+    //console.log( this.material.uniforms );
+    // if ( !this.material.uniforms )
+    //   return;
+    // this.material.uniforms.map.value = this.fontFace.glyphTexture;
+    this._material.map = this.fontFace.glyphTexture;
+    console.warn( this._material.map );
+    this._material.needsUpdate = true;
+    //this.material.setValues = this.fontFace.glyphTexture;
     // following line might not be necessary
     //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateDebug() {
-    if ( !this.material.uniforms )
-      return;
+    //@ts-expect-error
+    console.log( this.material.uniforms );
+    // if ( !this.material.uniforms )
+    //   return;
+    //@ts-expect-error
     this.material.uniforms.debug.value = this.debugMode;
     // following line might not be necessary
     //this.material.uniforms.debug.value.needsUpdate = true;
   }
 
   updateAntialiasing() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.aa.value = this._aa;
+    // if ( !this.material.uniforms )
+    //   return;
+    // this.material.uniforms.aa.value = this._aa;
     // following line might not be necessary
     //this.material.uniforms.debug.value.needsUpdate = true;
   }
@@ -353,11 +431,11 @@ class Label extends Object3D {
     this._texCoords = texCoords;
   }
 
-  protected get material(): ShaderMaterial {
-    return this.mesh.material as ShaderMaterial;
+  protected get material(): Material {
+    return this.mesh.material as Material;
   }
-  protected set material( material: ShaderMaterial ) {
-    ( this.mesh.material as ShaderMaterial ).dispose();
+  protected set material( material: Material ) {
+    ( this.mesh.material as Material ).dispose();
     this.mesh.material = material;
   }
 

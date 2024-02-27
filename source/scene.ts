@@ -68,7 +68,6 @@ let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: WorldInHandControls;
-//let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let stats: Stats;
