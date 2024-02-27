@@ -3,6 +3,8 @@ import { Label } from "./Label";
 import { Glyph } from "./Glyph";
 
 type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float32Array, texCoords: Float32Array; };
+type Extent = { min: Vector2, max: Vector2; };
+type TypesetResults = { bufferArrays: BufferArrays; extent: Extent; };
 
 // Setup common delimiters for wordwrapping
 const delimiters = [ '\x0A', ' ', '-', '/', '(', ')', '[', ']', '<', '>' ];
@@ -16,9 +18,6 @@ const isSpace = ( codepoint: number ): boolean => {
 };
 
 class Typesetter {
-  // stores line information for every glyph based on index (maybe only store start of line indices?)
-  protected _glyphLine: number[];
-
   static initArrays( size: number ): BufferArrays {
     const origins = new Float32Array( size * 3 ).fill( 0 );
     const tangents = new Float32Array( size * 3 ).fill( 0 );
@@ -28,7 +27,7 @@ class Typesetter {
     return { origins, tangents, ups, texCoords };
   }
 
-  static typeset( label: Label ): BufferArrays {
+  static typeset( label: Label ): TypesetResults {
     let { origins, tangents, ups, texCoords } = this.initArrays( label.length );
 
     const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
@@ -108,7 +107,7 @@ class Typesetter {
     // handle alignment for last line
     this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.length, origins );
 
-    return { origins, tangents, ups, texCoords };
+    return { bufferArrays: { origins, tangents, ups, texCoords }, extent: { min: new Vector2( 0, 0 ), max: new Vector2( 100, 100 ) } };
   }
 
   static shouldWrap( label: Label, pen: Vector3, glyph: Glyph, kerning: number ): boolean {

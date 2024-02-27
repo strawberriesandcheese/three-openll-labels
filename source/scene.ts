@@ -5,6 +5,7 @@ import {
   AnimationMixer,
   AxesHelper,
   Bone,
+  BoxHelper,
   Color,
   DirectionalLight,
   DirectionalLightHelper,
@@ -68,7 +69,6 @@ let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: WorldInHandControls;
-//let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let stats: Stats;
@@ -294,6 +294,10 @@ function addContent() {
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
+    console.log( headerLabel.boundingBox );
+    const box = new BoxHelper( headerLabel, 0xffff00 );
+    box.update();
+    scene.add( box );
 
     scene.add( headerLabel );
     labels.push( headerLabel );
