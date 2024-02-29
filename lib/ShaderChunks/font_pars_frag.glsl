@@ -2,16 +2,16 @@
 varying vec2 vUv;
 varying vec2 vDebugPosition;
 
-uniform bool debug;
-uniform vec3 color;
-uniform bool aa;
+uniform bool fontDebug;
+uniform vec3 fontColor;
+uniform bool fontAA;
 
 const int channel = 0;
 
 // Anti-aliasing implementation based on https://github.com/cginternals/webgl-operate/blob/master/source/text/glyph.frag
 float aastep(float t, float value)
 {
-  if(aa) 
+  if(fontAA) 
   {
     //TODO: find good value? was formerly a uniform in webgl-operate
     float aaStepScale = 0.8;
@@ -23,5 +23,6 @@ float aastep(float t, float value)
 
     return smoothstep(t - afwidth, t + afwidth, value);
   }
+
   return step(t, value);
 }

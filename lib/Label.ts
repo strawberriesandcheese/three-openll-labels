@@ -21,6 +21,7 @@ import {
   Quaternion,
   Renderer,
   Scene,
+  Shader,
   ShaderMaterial,
   SpriteMaterial,
   Texture,
@@ -61,7 +62,7 @@ class Label extends Object3D {
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
   protected _mesh: Mesh;
-  protected _material: SupportedMaterial;
+  protected _baseMaterial: SupportedMaterial;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
@@ -117,45 +118,25 @@ class Label extends Object3D {
     this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
     let geometry = new InstancedBufferGeometry();
-    let material2 = this.createShaderMaterial( new Texture, new Color );
-    this._material = material;
+    this._baseMaterial = material;
 
-    this._material.onBeforeCompile = ( shader ) => {
-
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <common>',
-        '#include <common>' + font_pars_vertex
-      );
-
-      shader.vertexShader = shader.vertexShader.replace(
-        '#include <begin_vertex>',
-        font_vertex
-      );
-
-      //console.log( shader.fragmentShader );
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <common>',
-        '#include <common>' + font_pars_frag
-      );
-
-      shader.fragmentShader = shader.fragmentShader.replace(
-        'vec4 diffuseColor = vec4( diffuse, opacity );',
-        `
-        #include <clipping_planes_fragment>
-        vec4 diffuseColor = vec4( color, opacity );
-        `
-      );
-
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <dithering_fragment>',
-        '#include <dithering_fragment>' + font_frag
-      );
-
-      console.log( shader.fragmentShader );
-      material.userData.shader = shader;
-    };
-    this.mesh = new Mesh( geometry, this._material );
+    this.mesh = new Mesh( geometry, this._baseMaterial );
     this.mesh.frustumCulled = this.frustumCulled;
+
+    // const cuDepMat = new MeshDepthMaterial();
+    // cuDepMat.onBeforeCompile = ( shader ) => {
+    //   this.injectVertexShader( shader );
+    //   cuDepMat.userData.shader = shader;
+    // };
+    // this.mesh.customDepthMaterial = cuDepMat;
+
+    // const cuDisMat = new MeshDistanceMaterial();
+    // cuDisMat.onBeforeCompile = ( shader ) => {
+    //   this.injectVertexShader( shader );
+
+    //   cuDisMat.userData.shader = shader;
+    // };
+    // this.mesh.customDistanceMaterial = cuDisMat;
 
     this.fontFace = fontFace;
     this._color = color;
@@ -167,7 +148,6 @@ class Label extends Object3D {
         // first we need to check if our parents frustum culling setting has changed
         this._frustumCulledChanged = this.frustumCulled !== this.mesh.frustumCulled;
         if ( this._frustumCulledChanged ) {
-          //console.log( this.frustumCulled, this.mesh.frustumCulled );
           this.mesh.frustumCulled = this.frustumCulled;
         }
 
@@ -181,8 +161,9 @@ class Label extends Object3D {
         if ( this._needsInitialLayout && this.fontFace.ready ) {
           this._needsLayout = true;
           this._needsInitialLayout = false;
-          this.updateMap();
           this.mesh.material = this.material;
+          this.injectShaders( this.material );
+          this.updateMap();
         }
 
         if ( this._needsLayout && this.fontFace.ready ) {
@@ -192,6 +173,58 @@ class Label extends Object3D {
         if ( this.projected )
           this.lookAt( camera.position );
       };
+  }
+
+  private injectShaders( material: Material ) {
+
+    material.onBeforeCompile = ( shader: Shader ) => {
+      this.injectVertexShader( shader );
+      this.injectFragmentShader( shader );
+      material.userData.shader = shader;
+    };
+  }
+
+  private injectVertexShader( shader: Shader ) {
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      '#include <common>' + font_pars_vertex
+    );
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      font_vertex
+    );
+  }
+
+  private injectFragmentShader( shader: Shader ) {
+
+    shader.uniforms.fontDebug = {
+      value: this.debugMode
+    };
+    shader.uniforms.fontColor = {
+      value: this.color
+    };
+    shader.uniforms.fontAA = {
+      value: this.aa
+    };
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      '#include <common>' + font_pars_frag
+    );
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      'vec4 diffuseColor = vec4( diffuse, opacity );',
+      `
+        #include <clipping_planes_fragment>
+        vec4 diffuseColor = vec4( fontColor, opacity );
+        `
+    );
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      '#include <dithering_fragment>' + font_frag
+    );
   }
 
   private updateText() {
@@ -239,12 +272,11 @@ class Label extends Object3D {
   }
 
   updateColor() {
-    // if ( !this.material.uniforms )
-    //   return;
-    // this.material.uniforms.color.value = this.color;
-    //this._material.color = this.color;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      shader.uniforms.fontColor.value = this.color;
+      this.material.needsUpdate = true;
+    }
   }
 
   updateMap() {
@@ -252,31 +284,31 @@ class Label extends Object3D {
     // if ( !this.material.uniforms )
     //   return;
     // this.material.uniforms.map.value = this.fontFace.glyphTexture;
-    this._material.map = this.fontFace.glyphTexture;
-    console.warn( this._material.map );
-    this._material.needsUpdate = true;
+    this._baseMaterial.map = this.fontFace.glyphTexture;
+    //console.warn( this._material.map );
+    this._baseMaterial.needsUpdate = true;
     //this.material.setValues = this.fontFace.glyphTexture;
     // following line might not be necessary
     //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateDebug() {
-    //@ts-expect-error
-    console.log( this.material.uniforms );
-    // if ( !this.material.uniforms )
-    //   return;
-    //@ts-expect-error
-    this.material.uniforms.debug.value = this.debugMode;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      shader.uniforms.fontDebug.value = this.debugMode;
+      this.material.needsUpdate = true;
+    }
   }
 
   updateAntialiasing() {
-    // if ( !this.material.uniforms )
-    //   return;
-    // this.material.uniforms.aa.value = this._aa;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      if ( this.aa && !this.material.transparent )
+        this.material.transparent = true;
+
+      shader.uniforms.fontAA.value = this.aa;
+      this.material.needsUpdate = true;
+    }
   }
 
   createShaderMaterial( map?: Texture, color?: Color ): ShaderMaterial {
