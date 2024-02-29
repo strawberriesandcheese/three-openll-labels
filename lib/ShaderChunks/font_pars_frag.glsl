@@ -3,8 +3,8 @@ varying vec2 vUv;
 varying vec2 vDebugPosition;
 
 uniform bool fontDebug;
-uniform vec3 fontColor;
 uniform bool fontAA;
+uniform sampler2D fontMap;
 
 const int channel = 0;
 

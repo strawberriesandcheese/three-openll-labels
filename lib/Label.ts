@@ -43,32 +43,19 @@ import font_frag from './ShaderChunks/font_frag.glsl?raw';
 import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
 
-type SupportedMaterial =
-  LineBasicMaterial |
-  MeshBasicMaterial |
-  MeshDepthMaterial |
-  MeshDistanceMaterial |
-  MeshLambertMaterial |
-  MeshMatcapMaterial |
-  MeshPhongMaterial |
-  MeshStandardMaterial |
-  MeshToonMaterial |
-  PointsMaterial |
-  SpriteMaterial;
-
 
 class Label extends Object3D {
 
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
   protected _mesh: Mesh;
-  protected _baseMaterial: SupportedMaterial;
+  protected _baseMaterial: Material;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
   protected _needsLayout = false;
   protected _textChanged = false;
-  protected _color = new Color( 0x000000 );
+  protected _color: Color;
   protected _text: string;
 
   protected _alwaysFaceCamera = false;
@@ -106,7 +93,7 @@ class Label extends Object3D {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ), material = new MeshStandardMaterial() ) {
+  constructor( text: string, fontFace: FontFace, color?: Color, material: Material = new MeshStandardMaterial() ) {
     super();
 
     this.text = text;
@@ -122,6 +109,10 @@ class Label extends Object3D {
 
     this.mesh = new Mesh( geometry, this._baseMaterial );
     this.mesh.frustumCulled = this.frustumCulled;
+
+    if ( this.labelMaterialHasColorUniform && color ) {
+      this.color = color;
+    }
 
     // const cuDepMat = new MeshDepthMaterial();
     // cuDepMat.onBeforeCompile = ( shader ) => {
@@ -139,7 +130,6 @@ class Label extends Object3D {
     // this.mesh.customDistanceMaterial = cuDisMat;
 
     this.fontFace = fontFace;
-    this._color = color;
   }
 
   setOnBeforeRender( mesh: Mesh ) {
@@ -163,6 +153,8 @@ class Label extends Object3D {
           this._needsInitialLayout = false;
           this.mesh.material = this.material;
           this.injectShaders( this.material );
+          if ( this.aa && !this.material.transparent )
+            this.material.transparent = true;
           this.updateMap();
         }
 
@@ -201,24 +193,16 @@ class Label extends Object3D {
     shader.uniforms.fontDebug = {
       value: this.debugMode
     };
-    shader.uniforms.fontColor = {
-      value: this.color
-    };
     shader.uniforms.fontAA = {
       value: this.aa
+    };
+    shader.uniforms.fontMap = {
+      value: this.fontFace.glyphTexture
     };
 
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <common>',
       '#include <common>' + font_pars_frag
-    );
-
-    shader.fragmentShader = shader.fragmentShader.replace(
-      'vec4 diffuseColor = vec4( diffuse, opacity );',
-      `
-        #include <clipping_planes_fragment>
-        vec4 diffuseColor = vec4( fontColor, opacity );
-        `
     );
 
     shader.fragmentShader = shader.fragmentShader.replace(
@@ -271,25 +255,12 @@ class Label extends Object3D {
     this.geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
   }
 
-  updateColor() {
+  updateMap() {
     const shader = this.material.userData.shader;
     if ( shader ) {
-      shader.uniforms.fontColor.value = this.color;
+      shader.uniforms.fontMap.value = this.fontFace.glyphTexture;
       this.material.needsUpdate = true;
     }
-  }
-
-  updateMap() {
-    //console.log( this.material.uniforms );
-    // if ( !this.material.uniforms )
-    //   return;
-    // this.material.uniforms.map.value = this.fontFace.glyphTexture;
-    this._baseMaterial.map = this.fontFace.glyphTexture;
-    //console.warn( this._material.map );
-    this._baseMaterial.needsUpdate = true;
-    //this.material.setValues = this.fontFace.glyphTexture;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateDebug() {
@@ -491,14 +462,17 @@ class Label extends Object3D {
   /**
    * Text color as THREE.Color
    */
-  get color(): Color {
+  get color(): Color | undefined {
     return this._color;
   }
   set color( color: Color ) {
-    if ( this._color === color )
-      return;
-    this._color = color;
-    this.updateColor();
+    if ( this.labelMaterialHasColorUniform ) {
+      if ( this._color === color )
+        return;
+      this._color = color;
+      if ( this.material && "color" in this.material )
+        this.material.color = this._color;
+    }
   }
 
   get fontSize(): number {
@@ -642,6 +616,10 @@ class Label extends Object3D {
       return;
     this._aa = aa;
     this.updateAntialiasing();
+  }
+
+  get labelMaterialHasColorUniform(): boolean {
+    return "color" in this._baseMaterial;
   }
 }
 
