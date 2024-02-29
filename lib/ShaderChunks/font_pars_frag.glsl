@@ -1,6 +1,6 @@
 
-varying vec2 vUv;
-varying vec2 vDebugPosition;
+varying vec2 vFontUv;
+varying vec2 vFontDebugPosition;
 
 uniform bool fontDebug;
 uniform bool fontAA;

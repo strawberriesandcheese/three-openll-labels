@@ -1,8 +1,8 @@
 
-vDebugPosition = position.xy;
+vFontDebugPosition = position.xy;
 
-vUv = texCoords.xy + position.xy * (texCoords.zw - texCoords.xy);
+vFontUv = fontTexCoords.xy + position.xy * (fontTexCoords.zw - fontTexCoords.xy);
 
-vec3 tangentDirection = position.x * tangent;
-vec3 upDirection = position.y * up;
-vec3 transformed = origin + tangentDirection + upDirection;
+vec3 tangentDirection = position.x * fontTangent;
+vec3 upDirection = position.y * fontUp;
+vec3 transformed = fontOrigin + tangentDirection + upDirection;

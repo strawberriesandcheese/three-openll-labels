@@ -20,12 +20,15 @@ import {
   PointsMaterial,
   Quaternion,
   Renderer,
+  RepeatWrapping,
   Scene,
   Shader,
   ShaderMaterial,
   SpriteMaterial,
   Texture,
+  TextureLoader,
   TypedArray,
+  Vector2,
   Vector3,
 } from 'three';
 
@@ -105,6 +108,7 @@ class Label extends Object3D {
     this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
     let geometry = new InstancedBufferGeometry();
+
     this._baseMaterial = material;
 
     this.mesh = new Mesh( geometry, this._baseMaterial );
@@ -173,6 +177,8 @@ class Label extends Object3D {
       this.injectVertexShader( shader );
       this.injectFragmentShader( shader );
       material.userData.shader = shader;
+      // console.log( this.text, "frag", shader.fragmentShader );
+      // console.log( this.text, "vert", shader.vertexShader );
     };
   }
 
@@ -249,10 +255,10 @@ class Label extends Object3D {
 
     this.geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
 
-    this.geometry.setAttribute( 'origin', this._originsAttribute );
-    this.geometry.setAttribute( 'tangent', this._tangentsAttribute );
-    this.geometry.setAttribute( 'up', this._upsAttribute );
-    this.geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
+    this.geometry.setAttribute( 'fontOrigin', this._originsAttribute );
+    this.geometry.setAttribute( 'fontTangent', this._tangentsAttribute );
+    this.geometry.setAttribute( 'fontUp', this._upsAttribute );
+    this.geometry.setAttribute( 'fontTexCoords', this._texCoordsAttribute );
   }
 
   updateMap() {
