@@ -1,4 +1,5 @@
 import {
+  Box3,
   BufferAttribute,
   Camera,
   Color,
@@ -13,6 +14,7 @@ import {
   ShaderMaterial,
   Texture,
   TypedArray,
+  Vector2,
   Vector3,
 } from 'three';
 
@@ -48,6 +50,8 @@ class Label extends Object3D {
   protected _debugMode = false;
   protected _aa = true;
   protected _frustumCulledChanged = false;
+  protected _boundingBox: Box3;
+  protected _extent: { min: Vector2, max: Vector2; };
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -143,12 +147,14 @@ class Label extends Object3D {
 
   layout() {
     const typesetResults = Typesetter.typeset( this );
-    this.origins = typesetResults.origins;
-    this.tangents = typesetResults.tangents;
-    this.ups = typesetResults.ups;
-    this.texCoords = typesetResults.texCoords;
+    this.origins = typesetResults.bufferArrays.origins;
+    this.tangents = typesetResults.bufferArrays.tangents;
+    this.ups = typesetResults.bufferArrays.ups;
+    this.texCoords = typesetResults.bufferArrays.texCoords;
+    this.extent = typesetResults.extent;
 
     this.setupGeometry();
+    this.computeBoundingBox();
     this._needsLayout = false;
   }
 
@@ -167,6 +173,15 @@ class Label extends Object3D {
     this.geometry.setAttribute( 'tangent', this._tangentsAttribute );
     this.geometry.setAttribute( 'up', this._upsAttribute );
     this.geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
+  }
+
+  computeBoundingBox(): Box3 {
+    const zDelta = 0.01;
+    const min = new Vector3( this.extent.min.x, this.extent.min.y, -zDelta );
+    const max = new Vector3( this.extent.max.x, this.extent.max.y, +zDelta );
+    let bBox = new Box3( min, max );
+    this.boundingBox = bBox;
+    return bBox;
   }
 
   updateColor() {
@@ -532,6 +547,26 @@ class Label extends Object3D {
       return;
     this._aa = aa;
     this.updateAntialiasing();
+  }
+
+  get boundingBox(): Box3 {
+    return this._boundingBox;
+  }
+  set boundingBox( boundingBox: Box3 ) {
+    this._boundingBox = boundingBox;
+    if ( this.geometry ) {
+      this.geometry.boundingBox = boundingBox;
+      this._boundingBox = this.geometry.boundingBox;
+    } else {
+      console.warn( "geometry was not ready at bbox compute" );
+    }
+  }
+
+  get extent(): { min: Vector2, max: Vector2; } {
+    return this._extent;
+  }
+  protected set extent( extent: { min: Vector2, max: Vector2; } ) {
+    this._extent = extent;
   }
 }
 

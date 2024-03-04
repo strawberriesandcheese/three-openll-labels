@@ -68,7 +68,6 @@ let fern: Group;
 let mixer: AnimationMixer;
 let camera: PerspectiveCamera;
 let cameraControls: WorldInHandControls;
-//let dragControls: DragControls;
 let axesHelper: AxesHelper;
 let pointLightHelper: PointLightHelper;
 let stats: Stats;
@@ -294,7 +293,6 @@ function addContent() {
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
-
     scene.add( headerLabel );
     labels.push( headerLabel );
 
@@ -308,7 +306,6 @@ function addContent() {
     sourceLabel.alignment = Label.Alignment.Center;
     sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
     labels.push( sourceLabel );
-    sourceLabel.frustumCulled = false;
 
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
@@ -448,9 +445,6 @@ function addGui() {
   const envFolder = gui.addFolder( 'Environment' );
   envFolder.add( plane, 'visible' ).name( 'plane' );
 
-  // const controlsFolder = gui.addFolder( 'Controls' );
-  // controlsFolder.add( dragControls, 'enabled' ).name( 'drag controls' );
-
   const lightsFolder = gui.addFolder( 'Lights' );
   lightsFolder.add( pointLight, 'visible' ).name( 'point light' );
   lightsFolder.add( directionalLight, 'visible' ).name( 'directional light' );
@@ -462,9 +456,6 @@ function addGui() {
   helpersFolder.add( pointLightHelper, 'visible' ).name( 'pointLight' );
   helpersFolder.add( directionalLightHelper, 'visible' ).name( 'directionalLight' );
   helpersFolder.add( debugSettings, 'logEnabled' ).name( 'logging' );
-
-  //const cameraFolder = gui.addFolder( 'Camera' );
-  //cameraFolder.add( cameraControls, 'autoRotate' );
 
   // persist GUI state in local storage on changes
   gui.onFinishChange( () => {
