@@ -5,7 +5,6 @@ import {
   AnimationMixer,
   AxesHelper,
   Bone,
-  BoxHelper,
   Color,
   DirectionalLight,
   DirectionalLightHelper,
@@ -294,11 +293,6 @@ function addContent() {
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
-    console.log( headerLabel.boundingBox );
-    const box = new BoxHelper( headerLabel, 0xffff00 );
-    box.update();
-    scene.add( box );
-
     scene.add( headerLabel );
     labels.push( headerLabel );
 
@@ -312,7 +306,6 @@ function addContent() {
     sourceLabel.alignment = Label.Alignment.Center;
     sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
     labels.push( sourceLabel );
-    sourceLabel.frustumCulled = false;
 
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
