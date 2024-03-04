@@ -6,7 +6,7 @@
   "homepage": "https://github.com/strawberriesandcheese",
   "repository": {
     "type": "git",
-    "url": "https://github.com/strawberriesandcheese/three-openll-labels.git"
+    "url": "git+https://github.com/strawberriesandcheese/three-openll-labels.git"
   },
   "bugs": {
     "url": "https://github.com/strawberriesandcheese/three-openll-labels/issues"
@@ -18,7 +18,7 @@
     "labels",
     "typescript"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "main": "dist/lib/three-openll-labels.js",
   "types": "dist/lib/three-openll-labels.d.ts",
