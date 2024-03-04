@@ -3,6 +3,8 @@ import { Label } from "./Label";
 import { Glyph } from "./Glyph";
 
 type BufferArrays = { origins: Float32Array, tangents: Float32Array, ups: Float32Array, texCoords: Float32Array; };
+type Extent = { min: Vector2, max: Vector2; };
+type TypesetResults = { bufferArrays: BufferArrays; extent: Extent; };
 
 // Setup common delimiters for wordwrapping
 const delimiters = [ '\x0A', ' ', '-', '/', '(', ')', '[', ']', '<', '>' ];
@@ -16,9 +18,6 @@ const isSpace = ( codepoint: number ): boolean => {
 };
 
 class Typesetter {
-  // stores line information for every glyph based on index (maybe only store start of line indices?)
-  protected _glyphLine: number[];
-
   static initArrays( size: number ): BufferArrays {
     const origins = new Float32Array( size * 3 ).fill( 0 );
     const tangents = new Float32Array( size * 3 ).fill( 0 );
@@ -28,7 +27,7 @@ class Typesetter {
     return { origins, tangents, ups, texCoords };
   }
 
-  static typeset( label: Label ): BufferArrays {
+  static typeset( label: Label ): TypesetResults {
     let { origins, tangents, ups, texCoords } = this.initArrays( label.length );
 
     const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
@@ -40,6 +39,10 @@ class Typesetter {
     let lastWordEndPen = new Vector3();
     lastWordEndPen.copy( pen );
     let firstWordOfNewLine = true;
+
+    let extent: Extent = { min: new Vector2( Infinity, Infinity ), max: new Vector2( -Infinity, -Infinity ) };
+
+    extent.max.y = label.fontFace.lineHeight * label.scalingFactor;
 
     for ( let i = glyphStart; i < label.length; i++ ) {
       let glyph = label.textGlyphs[ i ];
@@ -65,7 +68,7 @@ class Typesetter {
         kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
 
         // do alignment stuff for previous line
-        this.alignLine( lastWordEndPen, label.alignment, lineStartGlyphIndex, i, origins );
+        this.alignLine( lastWordEndPen, label.alignment, lineStartGlyphIndex, i, origins, extent );
 
         pen.y -= lineHeight * label.scalingFactor;
 
@@ -106,9 +109,9 @@ class Typesetter {
     }
 
     // handle alignment for last line
-    this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.length, origins );
+    this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.length, origins, extent );
 
-    return { origins, tangents, ups, texCoords };
+    return { bufferArrays: { origins, tangents, ups, texCoords }, extent };
   }
 
   static shouldWrap( label: Label, pen: Vector3, glyph: Glyph, kerning: number ): boolean {
@@ -119,21 +122,25 @@ class Typesetter {
     return pen.x + ( glyph.advance + kerning ) * label.scalingFactor > ( label.lineWidth );
   }
 
-  static alignLine( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, origins: Float32Array ) {
-    if ( alignment === Label.Alignment.Left ) {
-      return;
+  static alignLine( pen: Vector3, alignment: Label.Alignment, begin: number, end: number, origins: Float32Array, extent: Extent ) {
+    let penOffset = 0;
+    if ( !( alignment === Label.Alignment.Left ) ) {
+      penOffset = -pen.x;
     }
-
-    let penOffset = -pen.x;
 
     if ( alignment == Label.Alignment.Center ) {
       penOffset *= 0.5;
     }
 
+    extent.min.x = Math.min( extent.min.x, penOffset );
+    extent.min.y = Math.min( extent.min.y, pen.y );
+
     // Origin is expected to be in 'font face space' (not transformed)
     for ( let i = begin; i != end; ++i ) {
       origins[ 3 * i + Typesetter.Components.x ] += penOffset;
     }
+
+    extent.max.x = Math.max( extent.max.x, pen.x + penOffset );
   }
 
   static calculateOrigin( pen: Vector3, label: Label, glyphIndex: number, origins: Float32Array ) {
