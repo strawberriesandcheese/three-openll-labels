@@ -18,7 +18,7 @@
     "labels",
     "typescript"
   ],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "main": "dist/lib/three-openll-labels.js",
   "types": "dist/lib/three-openll-labels.d.ts",
@@ -41,7 +41,9 @@
     "vite-plugin-dts": "^3.7.2"
   },
   "dependencies": {
-    "@world-in-hand-controls/threejs-world-in-hand": "^0.0.7",
-    "three": "^0.158.0"
+    "@world-in-hand-controls/threejs-world-in-hand": "^0.0.8"
+  },
+  "peerDependencies": {
+    "three": "^0.162.0"
   }
 }
