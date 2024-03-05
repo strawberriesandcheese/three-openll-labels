@@ -6,11 +6,14 @@ import {
   DoubleSide,
   InstancedBufferAttribute,
   InstancedBufferGeometry,
+  Material,
   Mesh,
+  MeshStandardMaterial,
   Object3D,
   Quaternion,
   Renderer,
   Scene,
+  Shader,
   ShaderMaterial,
   Sphere,
   Texture,
@@ -23,6 +26,13 @@ import { FontFace } from './FontFace';
 
 import vertexShader from './shaders/font.vert?raw';
 import fragmentShader from './shaders/font.frag?raw';
+
+import font_pars_vertex from './ShaderChunks/font_pars_vertex.glsl?raw';
+import font_vertex from './ShaderChunks/font_vertex.glsl?raw';
+
+import font_pars_frag from './ShaderChunks/font_pars_frag.glsl?raw';
+import font_frag from './ShaderChunks/font_frag.glsl?raw';
+
 import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
 
@@ -32,12 +42,13 @@ class Label extends Object3D {
   static readonly DEFAULT_LINE_FEED = '\x0A';
 
   protected _mesh: Mesh;
+  protected _baseMaterial: Material;
 
   protected _fontFace: FontFace;
   protected _needsInitialLayout = true;
   protected _needsLayout = false;
   protected _textChanged = false;
-  protected _color = new Color( 0x000000 );
+  protected _color: Color;
   protected _text: string;
 
   protected _alwaysFaceCamera = false;
@@ -77,7 +88,7 @@ class Label extends Object3D {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ) ) {
+  constructor( text: string, fontFace: FontFace, color?: Color, material: Material = new MeshStandardMaterial() ) {
     super();
 
     this.text = text;
@@ -89,12 +100,32 @@ class Label extends Object3D {
     this._texCoords = new Float32Array( this.length * 4 ).fill( 0 );
 
     let geometry = new InstancedBufferGeometry();
-    let material = this.createShaderMaterial( new Texture, new Color );
-    this.mesh = new Mesh( geometry, material );
+
+    this._baseMaterial = material;
+
+    this.mesh = new Mesh( geometry, this._baseMaterial );
     this.mesh.frustumCulled = this.frustumCulled;
 
+    if ( this.labelMaterialHasColorUniform && color ) {
+      this.color = color;
+    }
+
+    // const cuDepMat = new MeshDepthMaterial();
+    // cuDepMat.onBeforeCompile = ( shader ) => {
+    //   this.injectVertexShader( shader );
+    //   cuDepMat.userData.shader = shader;
+    // };
+    // this.mesh.customDepthMaterial = cuDepMat;
+
+    // const cuDisMat = new MeshDistanceMaterial();
+    // cuDisMat.onBeforeCompile = ( shader ) => {
+    //   this.injectVertexShader( shader );
+
+    //   cuDisMat.userData.shader = shader;
+    // };
+    // this.mesh.customDistanceMaterial = cuDisMat;
+
     this.fontFace = fontFace;
-    this._color = color;
   }
 
   setOnBeforeRender( mesh: Mesh ) {
@@ -113,8 +144,11 @@ class Label extends Object3D {
         if ( this._needsInitialLayout && this.fontFace.ready ) {
           this._needsLayout = true;
           this._needsInitialLayout = false;
-          this.updateMap();
           this.mesh.material = this.material;
+          this.injectShaders( this.material );
+          if ( this.aa && !this.material.transparent )
+            this.material.transparent = true;
+          this.updateMap();
         }
 
         if ( this._needsLayout && this.fontFace.ready ) {
@@ -124,6 +158,52 @@ class Label extends Object3D {
         if ( this.projected )
           this.lookAt( camera.position );
       };
+  }
+
+  private injectShaders( material: Material ) {
+
+    material.onBeforeCompile = ( shader: Shader ) => {
+      this.injectVertexShader( shader );
+      this.injectFragmentShader( shader );
+      material.userData.shader = shader;
+      // console.log( this.text, "frag", shader.fragmentShader );
+      // console.log( this.text, "vert", shader.vertexShader );
+    };
+  }
+
+  private injectVertexShader( shader: Shader ) {
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      '#include <common>' + font_pars_vertex
+    );
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      font_vertex
+    );
+  }
+
+  private injectFragmentShader( shader: Shader ) {
+
+    shader.uniforms.fontDebug = {
+      value: this.debugMode
+    };
+    shader.uniforms.fontAA = {
+      value: this.aa
+    };
+    shader.uniforms.fontMap = {
+      value: this.fontFace.glyphTexture
+    };
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      '#include <common>' + font_pars_frag
+    );
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <dithering_fragment>',
+      '#include <dithering_fragment>' + font_frag
+    );
   }
 
   private updateText() {
@@ -167,21 +247,21 @@ class Label extends Object3D {
 
     this.geometry.setAttribute( 'position', new BufferAttribute( this._vertices, 3 ) );
 
-    this.geometry.setAttribute( 'origin', this._originsAttribute );
-    this.geometry.setAttribute( 'tangent', this._tangentsAttribute );
-    this.geometry.setAttribute( 'up', this._upsAttribute );
-    this.geometry.setAttribute( 'texCoords', this._texCoordsAttribute );
+    this.geometry.setAttribute( 'fontOrigin', this._originsAttribute );
+    this.geometry.setAttribute( 'fontTangent', this._tangentsAttribute );
+    this.geometry.setAttribute( 'fontUp', this._upsAttribute );
+    this.geometry.setAttribute( 'fontTexCoords', this._texCoordsAttribute );
 
     this.geometry.computeBoundingBox = () => {
       if ( this.boundingBox ) {
         this.computeBoundingBox();
         this.geometry.boundingBox = this.boundingBox;
-      } else {
         this.geometry.boundingBox = new Box3;
+      } else {
       }
     };
-
     this.geometry.computeBoundingSphere = () => {
+
       if ( this.boundingSphere ) {
         this.computeBoundingSphere();
         this.geometry.boundingSphere = this.boundingSphere;
@@ -208,36 +288,31 @@ class Label extends Object3D {
     this.boundingSphere = new Sphere( center, radius );
   }
 
-  updateColor() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.color.value = this.color;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
-  }
-
   updateMap() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.map.value = this.fontFace.glyphTexture;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      shader.uniforms.fontMap.value = this.fontFace.glyphTexture;
+      this.material.needsUpdate = true;
+    }
   }
 
   updateDebug() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.debug.value = this.debugMode;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      shader.uniforms.fontDebug.value = this.debugMode;
+      this.material.needsUpdate = true;
+    }
   }
 
   updateAntialiasing() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.aa.value = this._aa;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
+    const shader = this.material.userData.shader;
+    if ( shader ) {
+      if ( this.aa && !this.material.transparent )
+        this.material.transparent = true;
+
+      shader.uniforms.fontAA.value = this.aa;
+      this.material.needsUpdate = true;
+    }
   }
 
   createShaderMaterial( map?: Texture, color?: Color ): ShaderMaterial {
@@ -392,11 +467,11 @@ class Label extends Object3D {
     this._texCoords = texCoords;
   }
 
-  protected get material(): ShaderMaterial {
-    return this.mesh.material as ShaderMaterial;
+  protected get material(): Material {
+    return this.mesh.material as Material;
   }
-  protected set material( material: ShaderMaterial ) {
-    ( this.mesh.material as ShaderMaterial ).dispose();
+  protected set material( material: Material ) {
+    ( this.mesh.material as Material ).dispose();
     this.mesh.material = material;
   }
 
@@ -420,14 +495,17 @@ class Label extends Object3D {
   /**
    * Text color as THREE.Color
    */
-  get color(): Color {
+  get color(): Color | undefined {
     return this._color;
   }
   set color( color: Color ) {
-    if ( this._color === color )
-      return;
-    this._color = color;
-    this.updateColor();
+    if ( this.labelMaterialHasColorUniform ) {
+      if ( this._color === color )
+        return;
+      this._color = color;
+      if ( this.material && "color" in this.material )
+        this.material.color = this._color;
+    }
   }
 
   get fontSize(): number {
@@ -571,6 +649,10 @@ class Label extends Object3D {
       return;
     this._aa = aa;
     this.updateAntialiasing();
+  }
+
+  get labelMaterialHasColorUniform(): boolean {
+    return "color" in this._baseMaterial;
   }
 
   get boundingBox(): Box3 {
