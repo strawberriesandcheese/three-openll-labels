@@ -1,4 +1,5 @@
 import {
+  Box3,
   BufferAttribute,
   Camera,
   Color,
@@ -24,7 +25,7 @@ import {
   Scene,
   Shader,
   ShaderMaterial,
-  SpriteMaterial,
+  Sphere,
   Texture,
   TextureLoader,
   TypedArray,
@@ -71,7 +72,9 @@ class Label extends Object3D {
 
   protected _debugMode = false;
   protected _aa = true;
-  protected _frustumCulledChanged = false;
+  protected _boundingBox: Box3;
+  protected _boundingSphere: Sphere;
+  protected _extent: { min: Vector2, max: Vector2; };
 
   // TypeScript only references complex objects in arrays so we are not loosing (much, at all?) memory compared to an index based implementation
   protected _textGlyphs: Array<Glyph>;
@@ -139,11 +142,8 @@ class Label extends Object3D {
   setOnBeforeRender( mesh: Mesh ) {
     mesh.onBeforeRender =
       ( renderer: Renderer, scene: Scene, camera: Camera ) => {
-        // first we need to check if our parents frustum culling setting has changed
-        this._frustumCulledChanged = this.frustumCulled !== this.mesh.frustumCulled;
-        if ( this._frustumCulledChanged ) {
-          this.mesh.frustumCulled = this.frustumCulled;
-        }
+        // first we need to use our parents frustum culling setting
+        this.mesh.frustumCulled = this.frustumCulled;
 
         // we need to make sure we have an actual font face ready before starting to work with it
         if ( this._textChanged && this.fontFace.ready ) {
@@ -235,12 +235,15 @@ class Label extends Object3D {
 
   layout() {
     const typesetResults = Typesetter.typeset( this );
-    this.origins = typesetResults.origins;
-    this.tangents = typesetResults.tangents;
-    this.ups = typesetResults.ups;
-    this.texCoords = typesetResults.texCoords;
+    this.origins = typesetResults.bufferArrays.origins;
+    this.tangents = typesetResults.bufferArrays.tangents;
+    this.ups = typesetResults.bufferArrays.ups;
+    this.texCoords = typesetResults.bufferArrays.texCoords;
+    this.extent = typesetResults.extent;
 
     this.setupGeometry();
+    this.computeBoundingSphere();
+    this.computeBoundingBox();
     this._needsLayout = false;
   }
 
@@ -259,6 +262,49 @@ class Label extends Object3D {
     this.geometry.setAttribute( 'fontTangent', this._tangentsAttribute );
     this.geometry.setAttribute( 'fontUp', this._upsAttribute );
     this.geometry.setAttribute( 'fontTexCoords', this._texCoordsAttribute );
+
+    this.geometry.computeBoundingBox = () => {
+      if ( this.boundingBox ) {
+        this.computeBoundingBox();
+        this.geometry.boundingBox = this.boundingBox;
+        this.geometry.boundingBox = new Box3;
+      } else {
+      }
+    };
+    this.geometry.computeBoundingSphere = () => {
+
+      if ( this.boundingSphere ) {
+        this.computeBoundingSphere();
+        this.geometry.boundingSphere = this.boundingSphere;
+      } else {
+        this.geometry.boundingSphere = new Sphere;
+      }
+    };
+  }
+
+  computeBoundingBox() {
+    const zDelta = 1;
+    const min = new Vector3( this.extent.min.x, this.extent.min.y, -zDelta );
+    const max = new Vector3( this.extent.max.x, this.extent.max.y, +zDelta );
+    this.boundingBox = new Box3( min, max );;
+  }
+
+  computeBoundingSphere() {
+    const center = new Vector3(
+      ( this.extent.max.x - this.extent.min.x ) / 2,
+      ( this.extent.max.y - this.extent.min.y ) / 2,
+      0 );
+
+    const radius = Math.max( this.extent.max.x - this.extent.min.x, this.extent.max.y - this.extent.min.y );
+    this.boundingSphere = new Sphere( center, radius );
+  }
+
+  updateColor() {
+    if ( !this.material.uniforms )
+      return;
+    this.material.uniforms.color.value = this.color;
+    // following line might not be necessary
+    //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateMap() {
@@ -626,6 +672,27 @@ class Label extends Object3D {
 
   get labelMaterialHasColorUniform(): boolean {
     return "color" in this._baseMaterial;
+  }
+
+  get boundingBox(): Box3 {
+    return this._boundingBox;
+  }
+  set boundingBox( boundingBox: Box3 ) {
+    this._boundingBox = boundingBox;
+  }
+
+  get boundingSphere(): Sphere {
+    return this._boundingSphere;
+  }
+  set boundingSphere( boundingSphere: Sphere ) {
+    this._boundingSphere = boundingSphere;
+  }
+
+  get extent(): { min: Vector2, max: Vector2; } {
+    return this._extent;
+  }
+  protected set extent( extent: { min: Vector2, max: Vector2; } ) {
+    this._extent = extent;
   }
 }
 
