@@ -8,9 +8,12 @@ import {
   InstancedBufferGeometry,
   Material,
   Mesh,
+  MeshDepthMaterial,
+  MeshDistanceMaterial,
   MeshStandardMaterial,
   Object3D,
   Quaternion,
+  RGBADepthPacking,
   Renderer,
   Scene,
   Shader,
@@ -110,20 +113,22 @@ class Label extends Object3D {
       this.color = color;
     }
 
-    // const cuDepMat = new MeshDepthMaterial();
-    // cuDepMat.onBeforeCompile = ( shader ) => {
-    //   this.injectVertexShader( shader );
-    //   cuDepMat.userData.shader = shader;
-    // };
-    // this.mesh.customDepthMaterial = cuDepMat;
+    const cuDepMat = new MeshDepthMaterial( { depthPacking: RGBADepthPacking } );
+    cuDepMat.onBeforeCompile = ( shader ) => {
+      console.log( "depth vertex", shader.vertexShader );
+      this.injectVertexShader( shader );
+      this.injectFragmentShader( shader );
+      cuDepMat.userData.shader = shader;
+    };
+    this.mesh.customDepthMaterial = cuDepMat;
 
-    // const cuDisMat = new MeshDistanceMaterial();
-    // cuDisMat.onBeforeCompile = ( shader ) => {
-    //   this.injectVertexShader( shader );
-
-    //   cuDisMat.userData.shader = shader;
-    // };
-    // this.mesh.customDistanceMaterial = cuDisMat;
+    const cuDisMat = new MeshDistanceMaterial();
+    cuDisMat.onBeforeCompile = ( shader ) => {
+      this.injectVertexShader( shader );
+      this.injectFragmentShader( shader );
+      cuDisMat.userData.shader = shader;
+    };
+    this.mesh.customDistanceMaterial = cuDisMat;
 
     this.fontFace = fontFace;
   }
@@ -133,6 +138,9 @@ class Label extends Object3D {
       ( renderer: Renderer, scene: Scene, camera: Camera ) => {
         // first we need to use our parents frustum culling setting
         this.mesh.frustumCulled = this.frustumCulled;
+
+        this.mesh.castShadow = this.castShadow;
+        this.mesh.receiveShadow = this.receiveShadow;
 
         // we need to make sure we have an actual font face ready before starting to work with it
         if ( this._textChanged && this.fontFace.ready ) {

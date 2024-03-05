@@ -163,6 +163,9 @@ function addContent() {
     directionalLight = new DirectionalLight( '#fdfbd3', 1 );
     directionalLight.position.set( 13, 7, 10 );
     directionalLight.castShadow = true;
+    directionalLight.shadow.camera.top = ( 15 );
+    directionalLight.shadow.camera.right = ( 10 );
+    directionalLight.shadow.camera.left = ( -10 );
 
     scene.add( ambientLight );
     scene.add( pointLight );
@@ -324,12 +327,13 @@ function addContent() {
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
     scene.add( infoLabel );
-    infoLabel.position.set( 0, 3, 4 );
+    infoLabel.position.set( 0, 0.4, 4 );
     infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
     infoLabel.wrap = true;
     infoLabel.lineWidth = 30;
     infoLabel.castShadow = true;
+    infoLabel.receiveShadow = true;
 
     numberOfLabels = labels.length;
   }
