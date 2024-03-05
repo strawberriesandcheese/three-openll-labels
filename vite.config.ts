@@ -3,7 +3,6 @@ import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig( ( configEnv ) => {
-  console.log( configEnv.mode );
   if ( configEnv.mode === 'production' ) {
     return {
       base: '/three-openll-labels/',

@@ -118,11 +118,18 @@ scene.add(cube); //attached label is automatically also added to scene
 
 ## CLI Commands
 
-Installation
+Library Installation
 
 ```bash
 npm i
 ```
+
+Demo Installation
+
+```bash
+npm run install:demo
+```
+
 
 Run dev mode
 
