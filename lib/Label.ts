@@ -299,14 +299,6 @@ class Label extends Object3D {
     this.boundingSphere = new Sphere( center, radius );
   }
 
-  updateColor() {
-    if ( !this.material.uniforms )
-      return;
-    this.material.uniforms.color.value = this.color;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
-  }
-
   updateMap() {
     const shader = this.material.userData.shader;
     if ( shader ) {
