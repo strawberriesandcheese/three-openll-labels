@@ -35,6 +35,7 @@ import font_vertex from './ShaderChunks/font_vertex.glsl?raw';
 
 import font_pars_frag from './ShaderChunks/font_pars_frag.glsl?raw';
 import font_frag from './ShaderChunks/font_frag.glsl?raw';
+import font_shadow_frag from './ShaderChunks/font_shadow_frag.glsl?raw';
 
 import { Glyph } from './Glyph';
 import { Typesetter } from './Typesetter';
@@ -115,9 +116,9 @@ class Label extends Object3D {
 
     const cuDepMat = new MeshDepthMaterial( { depthPacking: RGBADepthPacking } );
     cuDepMat.onBeforeCompile = ( shader ) => {
-      console.log( "depth vertex", shader.vertexShader );
       this.injectVertexShader( shader );
-      this.injectFragmentShader( shader );
+      this.injectShadowFragmentShader( shader );
+      console.log( "depth vertex", shader.fragmentShader );
       cuDepMat.userData.shader = shader;
     };
     this.mesh.customDepthMaterial = cuDepMat;
@@ -125,7 +126,7 @@ class Label extends Object3D {
     const cuDisMat = new MeshDistanceMaterial();
     cuDisMat.onBeforeCompile = ( shader ) => {
       this.injectVertexShader( shader );
-      this.injectFragmentShader( shader );
+      this.injectShadowFragmentShader( shader );
       cuDisMat.userData.shader = shader;
     };
     this.mesh.customDistanceMaterial = cuDisMat;
@@ -211,6 +212,29 @@ class Label extends Object3D {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <dithering_fragment>',
       '#include <dithering_fragment>' + font_frag
+    );
+  }
+
+  private injectShadowFragmentShader( shader: Shader ) {
+
+    shader.uniforms.fontDebug = {
+      value: this.debugMode
+    };
+    shader.uniforms.fontAA = {
+      value: this.aa
+    };
+    shader.uniforms.fontMap = {
+      value: this.fontFace.glyphTexture
+    };
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      '#include <common>' + font_pars_frag
+    );
+
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <alphahash_fragment>',
+      '#include <alphahash_fragment>' + font_shadow_frag
     );
   }
 
