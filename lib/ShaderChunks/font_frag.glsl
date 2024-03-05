@@ -14,7 +14,7 @@
 
     //maybe don't discard who knows: https://stackoverflow.com/questions/8509051/is-discard-bad-for-program-performance-in-opengl
     if(alpha <= 0.0) {
-      //discard;
+      discard;
     }
 
     gl_FragColor = vec4(resultColor, alpha);

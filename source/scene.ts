@@ -24,6 +24,7 @@ import {
   SRGBColorSpace,
   Scene,
   SkinnedMesh,
+  Texture,
   TextureLoader,
   Vector2,
   Vector3,
@@ -74,6 +75,11 @@ let stats: Stats;
 let drawCallPanel: Stats.Panel;
 let gui: GUI;
 let bodyFont: FontFace;
+let coolMaterial: MeshStandardMaterial;
+let floorColorTexture: Texture;
+let floorDispTexture: Texture;
+let floorNormalTexture: Texture;
+let floorRoughTexture: Texture;
 
 let lastFrame: number;
 
@@ -170,22 +176,22 @@ function addContent() {
     const wrappingMode = RepeatWrapping;
     const texturePath = "./textures/rock_pitted_mossy/rock_pitted_mossy_";
 
-    const floorColorTexture = loader.load( texturePath + "diff_1k.jpg" );
+    floorColorTexture = loader.load( texturePath + "diff_1k.jpg" );
     floorColorTexture.repeat = repeatVector;
     floorColorTexture.wrapS = wrappingMode;
     floorColorTexture.wrapT = wrappingMode;
 
-    const floorDispTexture = loader.load( texturePath + 'disp_1k.png' );
+    floorDispTexture = loader.load( texturePath + 'disp_1k.png' );
     floorDispTexture.repeat = repeatVector;
     floorDispTexture.wrapS = wrappingMode;
     floorDispTexture.wrapT = wrappingMode;
 
-    const floorNormalTexture = loader.load( texturePath + 'nor_gl_1k.png' );
+    floorNormalTexture = loader.load( texturePath + 'nor_gl_1k.png' );
     floorNormalTexture.repeat = repeatVector;
     floorNormalTexture.wrapS = wrappingMode;
     floorNormalTexture.wrapT = wrappingMode;
 
-    const floorRoughTexture = loader.load( texturePath + 'rough_1k.png' );
+    floorRoughTexture = loader.load( texturePath + 'rough_1k.png' );
     floorRoughTexture.repeat = repeatVector;
     floorRoughTexture.wrapS = wrappingMode;
     floorRoughTexture.wrapT = wrappingMode;
@@ -290,13 +296,21 @@ function addContent() {
     bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
     const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
+    coolMaterial = new MeshStandardMaterial( {
+      map: floorColorTexture,
+      //displacementMap: floorDispTexture,
+      normalMap: floorNormalTexture,
+      roughnessMap: floorRoughTexture,
+      side: 2,
+    } );
+
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
     headerLabel.position.set( -4, 5, 1 );
     scene.add( headerLabel );
     labels.push( headerLabel );
 
-    infoLabel = new Label( triceratopsWrapText, bodyFont, new Color( colors.infoColor ) );
+    infoLabel = new Label( triceratopsWrapText, bodyFont, undefined, coolMaterial );
     labels.push( infoLabel );
 
     const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
