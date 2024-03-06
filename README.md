@@ -87,7 +87,7 @@ scene.add(lonelyLabel);
 scene.add(cube); //attached label is automatically also added to scene
 ```
 ### 6. Settings
-- ```aa```: anti-aliasing on when true
+- ```aa```: anti-aliasing on when true, WARNING: overrides transparency setting of base material to be transparent
 - ```alignment```: set text alignment to left, center or right
 - ```color```: change text color
 - ```debugMode```: draws green borders around all glyphs
