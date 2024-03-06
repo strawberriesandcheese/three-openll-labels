@@ -93,7 +93,7 @@ scene.add(cube); //attached label is automatically also added to scene
 - ```debugMode```: draws green borders around all glyphs
 - ```fontface```: change font
 - ```fontsize```: change font size (can be used as an alternativ to scaling)
-- ```lineAnchor```: set line anchor to baseline, descnedant, ascendant and others
+- ```lineAnchor```: set line anchor to baseline, descendant, ascendant and others
 - ```lineFeed```: set line feed character (default is normal new line)
 - ```wrap```: set label to wrap mode in which line breaks are inserted if the lineWidth is exceeded
 - ```lineWidth```: set line width after which there is an automatic line feed
