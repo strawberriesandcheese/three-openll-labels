@@ -30,7 +30,7 @@ class Typesetter {
   static typeset( label: Label ): TypesetResults {
     let { origins, tangents, ups, texCoords } = this.initArrays( label.length );
 
-    const penStartPosition = new Vector3( 0, label.lineAnchorOffset * label.scalingFactor, 0 );
+    const penStartPosition = new Vector3( 0, -label.lineAnchorOffset * label.scalingFactor, 0 );
     let pen = new Vector3;
     pen.copy( penStartPosition );
     let glyphStart = 0;
