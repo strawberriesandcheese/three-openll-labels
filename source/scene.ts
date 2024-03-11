@@ -535,6 +535,7 @@ function addLabelGui() {
   folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
   folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 0 ).max( 100 ).step( 5 );
   folder.add( infoLabel, 'alignment', Label.Alignment );
+  folder.add( infoLabel, 'lineAnchor', Label.LineAnchor );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 

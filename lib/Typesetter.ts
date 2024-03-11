@@ -111,6 +111,8 @@ class Typesetter {
     // handle alignment for last line
     this.alignLine( pen, label.alignment, lineStartGlyphIndex, label.length, origins, extent );
 
+    this.anchorAdjust( origins, extent, label );
+
     return { bufferArrays: { origins, tangents, ups, texCoords }, extent };
   }
 
@@ -141,6 +143,18 @@ class Typesetter {
     }
 
     extent.max.x = Math.max( extent.max.x, pen.x + penOffset );
+  }
+
+  static anchorAdjust( origins: Float32Array, extent: Extent, label: Label ) {
+    let anchorAdjustment = { x: 0, y: 0 };
+    anchorAdjustment.x = - extent.min.x;
+    anchorAdjustment.y = - extent.max.y / 2;
+    for ( let glyphIndex = 0; glyphIndex < ( origins.length / 3 ); glyphIndex++ ) {
+      origins[ 3 * glyphIndex + 0 ] += anchorAdjustment.x;
+      origins[ 3 * glyphIndex + 1 ] += 0;
+      origins[ 3 * glyphIndex + 2 ] += 0;
+    }
+
   }
 
   static calculateOrigin( pen: Vector3, label: Label, glyphIndex: number, origins: Float32Array ) {
