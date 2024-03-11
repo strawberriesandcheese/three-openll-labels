@@ -38,9 +38,7 @@ import { WorldInHandControls } from '@world-in-hand-controls/threejs-world-in-ha
 
 import './style.css';
 
-import { Label } from '../lib/main';
-import { FontFace } from '../lib/main';
-import { FontFaceLoader } from '../lib/main';
+import { Label, FontFace, FontFaceLoader } from 'three-openll-labels';
 import { MultilineController } from './helpers/multilineController';
 
 const base = document.createElement( 'base' );

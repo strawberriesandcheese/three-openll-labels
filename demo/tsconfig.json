@@ -19,13 +19,5 @@
     "removeComments": false,
     "skipLibCheck": true,
     "strictPropertyInitialization": false
-  },
-  "include": [ 
-      "lib",
-      "source"
-  ],
-  "exclude": [
-      "node_modules",
-      "dist"
-  ]
+  }
 }

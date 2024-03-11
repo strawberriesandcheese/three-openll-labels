@@ -101,7 +101,7 @@ scene.add(cube); //attached label is automatically also added to scene
 - ```text```: change text content
 
 ## Stuff included in the `scene.ts`
-<img width="796" alt="screenshot" src="public/screenshot_wip.png">
+<img width="796" alt="screenshot" src="assets/screenshot_wip.png">
 
 - [x] Triceratops
 - [x] Triceratops Animations
@@ -124,33 +124,32 @@ Library Installation
 npm i
 ```
 
-Demo Installation
-
-```bash
-npm run install:demo
-```
-
-
 Run dev mode
 
 ```bash
 npm run dev
 ```
 
-Build library
-
-```bash
-npm run build:lib
-```
-
-Build demo
+Build
 
 ```bash
 npm run build
 ```
 
+Build library only
+
+```bash
+npm run build -w lib
+```
+
+Build demo only
+
+```bash
+npm run build -w demo
+```
+
 Run demo build
 
 ```bash
-npm run preview
+npm run preview -w demo
 ```

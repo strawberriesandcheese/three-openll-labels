@@ -1,46 +1,17 @@
 {
-  "name": "three-openll-labels",
-  "description": "Adds labelling capabilities using signed distance field rendering of fonts to three.js",
-  "author": "strawberriesandcheese",
-  "license": "MIT",
-  "homepage": "https://github.com/strawberriesandcheese",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/strawberriesandcheese/three-openll-labels.git"
-  },
-  "bugs": {
-    "url": "https://github.com/strawberriesandcheese/three-openll-labels/issues"
-  },
-  "keywords": [
-    "three",
-    "sdf",
-    "labelling",
-    "labels",
-    "typescript"
-  ],
-  "version": "0.0.8",
-  "type": "module",
-  "main": "dist/lib/three-openll-labels.js",
-  "types": "dist/lib/three-openll-labels.d.ts",
-  "files": [
-    "dist/lib"
+  "workspaces": [
+    "lib",
+    "demo"
   ],
   "scripts": {
-    "install:demo": "npm --prefix ./source i",
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "build:lib": "tsc --p ./tsconfig.build.lib.json && vite build --mode library",
-    "prepack": "tsc --p ./tsconfig.build.lib.json && vite build --mode library"
+    "dev": "concurrently \"npm:dev-*\"",
+    "dev-lib": "npm run dev -w lib",
+    "dev-demo": "npm run dev -w demo",
+    "build": "npm run build --workspaces",
+    "bundle": "npm pack -w lib",
+    "publish": "npm run publish -w lib"
   },
   "devDependencies": {
-    "@types/node": "^20.11.17",
-    "typescript": "^5.2.2",
-    "vite": "^4.5.0",
-    "vite-plugin-dts": "^3.7.2"
-  },
-  "peerDependencies": {
-    "@types/three": "^0.158.1",
-    "three": "^0.162.0"
+    "concurrently": "^8.2.2"
   }
 }

@@ -31,10 +31,10 @@ jobs:
           node-version: 18
           cache: 'npm'
       - name: Install library dependencies
-        run: npm install
+        run: npm i -w lib
       - name: Build lib
-        run: npm run build:lib
+        run: npm run build -w lib
       - name: Install demo dependencies
-        run: npm run install:demo
+        run: npm i -w demo
       - name: Build demo
-        run: npm run build
+        run: npm run build -w demo

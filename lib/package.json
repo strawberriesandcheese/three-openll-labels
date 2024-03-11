@@ -1,0 +1,47 @@
+{
+    "name": "three-openll-labels",
+    "description": "Adds labelling capabilities using signed distance field rendering of fonts to three.js",
+    "author": "strawberriesandcheese",
+    "license": "MIT",
+    "homepage": "https://github.com/strawberriesandcheese",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/strawberriesandcheese/three-openll-labels.git"
+    },
+    "bugs": {
+      "url": "https://github.com/strawberriesandcheese/three-openll-labels/issues"
+    },
+    "keywords": [
+      "three",
+      "sdf",
+      "labelling",
+      "labels",
+      "typescript"
+    ],
+    "version": "0.0.8",
+    "type": "module",
+    "main": "dist/three-openll-labels.js",
+    "types": "dist/three-openll-labels.d.ts",
+    "files": [
+      "dist",
+      "../README.md",
+      "../LICENSE.txt"
+    ],
+    "scripts": {
+      "dev": "vite build --watch",
+      "build": "tsc && vite build",
+      "prepack": "npm run build && node pack pre",
+      "postpack": "node pack post"
+    },
+    "devDependencies": {
+      "@types/node": "^20.11.17",
+      "@types/three": "^0.158.1",
+      "typescript": "^5.2.2",
+      "vite": "^4.5.0",
+      "vite-plugin-dts": "^3.7.2"
+    },
+    "peerDependencies": {
+      "three": "^0.162.0"
+    }
+  }
+  

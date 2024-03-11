@@ -35,10 +35,8 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
-      - name: Install library dependencies
-        run: npm install
-      - name: Install demo dependencies
-        run: npm run install:demo
+      - name: Install dependencies
+        run: npm i
       - name: Build
         run: npm run build
       - name: Setup Pages
@@ -47,7 +45,7 @@ jobs:
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload dist repository
-          path: './dist/demo'
+          path: './demo/dist'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
