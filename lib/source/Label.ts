@@ -37,7 +37,7 @@ class Label extends Object3D {
   protected _needsInitialLayout = true;
   protected _needsLayout = false;
   protected _textChanged = false;
-  protected _color = new Color( 0x000000 );
+  protected _color: Color;
   protected _text: string;
 
   protected _alwaysFaceCamera = false;
@@ -77,7 +77,7 @@ class Label extends Object3D {
   private _upsAttribute: InstancedBufferAttribute;
   private _texCoordsAttribute: InstancedBufferAttribute;
 
-  constructor( text: string, fontFace: FontFace, color: Color = new Color( 0x000000 ) ) {
+  constructor( text: string, fontFace: FontFace, color = new Color( 0x000000 ) ) {
     super();
 
     this.text = text;
@@ -94,7 +94,7 @@ class Label extends Object3D {
     this.mesh.frustumCulled = this.frustumCulled;
 
     this.fontFace = fontFace;
-    this._color = color;
+    this.color = color;
   }
 
   setOnBeforeRender( mesh: Mesh ) {
@@ -115,6 +115,7 @@ class Label extends Object3D {
           this._needsInitialLayout = false;
           this.updateMap();
           this.mesh.material = this.material;
+          this.updateColor();
         }
 
         if ( this._needsLayout && this.fontFace.ready ) {
