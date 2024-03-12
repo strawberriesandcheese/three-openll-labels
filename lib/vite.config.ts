@@ -22,5 +22,6 @@ export default defineConfig( {
         dir: 'dist'
       }
     }
-  }
+  },
+  cacheDir: '../node_modules'
 } );

@@ -9,8 +9,7 @@
   },
   "dependencies": {
     "@types/three": "^0.158.1",
-    "three": "^0.162.0",
-    "three-openll-labels": "^0.0.8"
+    "three": "^0.162.0"
   },
   "scripts": {
     "dev": "vite",
