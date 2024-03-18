@@ -14,16 +14,20 @@ import {
   LinearSRGBColorSpace,
   LoadingManager,
   Mesh,
+  MeshLambertMaterial,
   MeshStandardMaterial,
+  Object3D,
   PCFSoftShadowMap,
   PerspectiveCamera,
   PlaneGeometry,
   PointLight,
   PointLightHelper,
+  Raycaster,
   RepeatWrapping,
   SRGBColorSpace,
   Scene,
   SkinnedMesh,
+  SphereGeometry,
   TextureLoader,
   Vector2,
   Vector3,
@@ -59,6 +63,7 @@ let trikeBones: Bone[];
 let labels = new Array<Label>;
 let headerLabel: Label;
 let infoLabel: Label;
+let infoSphere: Mesh;
 let plane: Mesh;
 let gridHelper: GridHelper;
 let palm: Group;
@@ -76,9 +81,13 @@ let headingFont: FontFace;
 
 let lastFrame: number;
 
+let raycaster: Raycaster;
+let mouse: Vector2;
+let hovered: Object3D[] = [];
+
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
-let trikeBoneAnnotations = { enabled: false, scale: 0.15 };
+let trikeBoneAnnotations = { enabled: true, scale: 0.15 };
 
 let debugSettings = { logEnabled: false, glyphDebug: false };
 let loggingInfo = { labels: 0, drawCalls: 0 };
@@ -212,6 +221,9 @@ function init() {
     cameraControls.allowRotationBelowGroundPlane = false;
     cameraControls.useBottomOfBoundingBoxAsGroundPlane = false;
     cameraControls.rotateAroundMousePosition = false;
+
+    raycaster = new Raycaster();
+    mouse = new Vector2();
   }
 
 }
@@ -341,6 +353,17 @@ function addContent() {
     plane.receiveShadow = true;
 
     scene.add( plane );
+  }
+
+  // ===== SPHERE =====
+  {
+    const geometry = new SphereGeometry;
+    const material = new MeshLambertMaterial;
+
+    infoSphere = new Mesh( geometry, material );
+    infoSphere.position.set( -4, 2, 0 );
+    infoSphere.scale.set( 0.2, 0.2, 0.2 );
+    scene.add( infoSphere );
   }
 
   // ===== 🌴 PLANTS =====
@@ -517,7 +540,6 @@ function addContent() {
             const angle = ( boneInfo.offsetRotationAngle / 180 ) * Math.PI;
             label.addTo( animBoneStart, offset, boneInfo.offsetRotationAxis, angle );
             label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
-            label.visible = false;
             labels.push( label );
           } else {
             console.warn( boneInfo.startId );
@@ -534,8 +556,8 @@ function addContent() {
           trikeAnimationNames[ i ] = animation.name;
         } );
 
-        trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: true };
-        toggleTrikeAnimation();
+        trikeAnimationSettings = { animation: trikeAnimationNames[ 4 ], play: false };
+        //toggleTrikeAnimation();
 
         trike.position.y = 1;
 
@@ -557,6 +579,37 @@ function addControls() {
       //@ts-expect-error
       scene.dispatchEvent( { type: 'resize' } );
     }
+  } );
+
+  // Raycast object pointer events adapted from https://codesandbox.io/p/sandbox/basic-threejs-example-with-re-use-dsrvn
+  window.addEventListener( 'pointermove', ( e ) => {
+    mouse.set( ( e.clientX / window.innerWidth ) * 2 - 1, -( e.clientY / window.innerHeight ) * 2 + 1 );
+    raycaster.setFromCamera( mouse, camera );
+    const intersects = raycaster.intersectObjects( scene.children, true );
+
+    // If a previously hovered item is not among the hits we must call onPointerOut
+    hovered.forEach( ( object3d, index ) => {
+      const hit = intersects.find( ( intersection ) => intersection.object === object3d );
+      if ( hit === undefined ) {
+        delete hovered[ index ];
+        if ( object3d === infoSphere ) {
+          console.warn( "stop hovering" );
+          infoSphere.material.color = new Color( 'white' );
+        };
+      }
+
+    } );
+
+    intersects.forEach( ( intersection ) => {
+      // If a hit has not been flagged as hovered we must call onPointerOver
+      if ( !hovered.find( ( object3d ) => intersection.object === object3d ) ) {
+        hovered.push( intersection.object );
+        if ( intersection.object === infoSphere ) {
+          infoSphere.material.color = new Color( 'orange' );
+          console.warn( "start hovering" );
+        }
+      }
+    } );
   } );
 }
 
