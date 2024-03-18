@@ -78,7 +78,7 @@ let lastFrame: number;
 
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
-let trikeBoneAnnotations = { enabled: false, scale: 0.15 };
+let trikeBoneAnnotations = { enabled: true, scale: 0.15 };
 
 let debugSettings = { logEnabled: false, glyphDebug: false };
 let loggingInfo = { labels: 0, drawCalls: 0 };
@@ -206,7 +206,7 @@ function init() {
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
-    camera.position.set( 5, 2.5, 5 );
+    camera.position.set( 7, 1.5, 4 );
     camera.lookAt( new Vector3( 0, 0, 0 ) );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
     cameraControls.allowRotationBelowGroundPlane = false;
@@ -389,8 +389,7 @@ function addContent() {
 
   // ===== 🆎 STATIC LABELS =====
   {
-    const triceratopsHeadingText = `Triceratops
-        	    horridus`;
+    const triceratopsHeadingText = `Triceratops\nhorridus`;
     const triceratopsWrapText =
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.`;
 
@@ -399,7 +398,8 @@ function addContent() {
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
-    headerLabel.position.set( -4, 5, 1 );
+    headerLabel.rotateY( Math.PI / 2 );
+    headerLabel.position.set( -20, 6, 3 );
     scene.add( headerLabel );
     labels.push( headerLabel );
 
@@ -409,19 +409,20 @@ function addContent() {
     const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
     sourceLabel;
     sourceLabel.fontSize = 0.5;
+    sourceLabel.projected = true;
     sourceLabel.addTo( infoLabel );
     sourceLabel.alignment = Label.Alignment.Center;
-    sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
+    sourceLabel.translateGlobal( new Vector3( 0, -11, 0 ) );
     labels.push( sourceLabel );
 
-    infoLabel.scale.set( 0.5, 0.5, 0.5 );
-    infoLabel.rotateX( -Math.PI / 2 );
+    infoLabel.scale.set( 0.1, 0.1, 0.1 );
+    infoLabel.projected = true;
     scene.add( infoLabel );
-    infoLabel.position.set( 0, 0.4, 4 );
+    infoLabel.position.set( 0, 2, 4 );
     infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
     infoLabel.wrap = true;
-    infoLabel.lineWidth = 30;
+    infoLabel.lineWidth = 20;
 
     numberOfLabels = labels.length;
   }
@@ -517,7 +518,6 @@ function addContent() {
             const angle = ( boneInfo.offsetRotationAngle / 180 ) * Math.PI;
             label.addTo( animBoneStart, offset, boneInfo.offsetRotationAxis, angle );
             label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
-            label.visible = false;
             labels.push( label );
           } else {
             console.warn( boneInfo.startId );
@@ -646,7 +646,7 @@ function addFernGui() {
 function addLabelGui() {
   const folder = gui.folders[ 0 ];
   folder.add( headerLabel, 'visible' ).name( 'header' );
-  folder.add( headerLabel, 'text' ).name( 'header text' );
+  //folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
@@ -655,7 +655,7 @@ function addLabelGui() {
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
   folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
-  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 0 ).max( 100 ).step( 5 );
+  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 20 ).max( 100 ).step( 10 );
   folder.add( infoLabel, 'alignment', Label.Alignment );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
