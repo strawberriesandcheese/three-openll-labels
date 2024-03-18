@@ -72,12 +72,13 @@ let stats: Stats;
 let drawCallPanel: Stats.Panel;
 let gui: GUI;
 let bodyFont: FontFace;
+let headingFont: FontFace;
 
 let lastFrame: number;
 
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
-let trikeBoneAnnotations = { enabled: false, scale: 0.1 };
+let trikeBoneAnnotations = { enabled: false, scale: 0.15 };
 
 let debugSettings = { logEnabled: false, glyphDebug: false };
 let loggingInfo = { labels: 0, drawCalls: 0 };
@@ -85,6 +86,105 @@ let previousLoggingInfo = { labels: 0, drawCalls: 0 };
 let numberOfLabels = 0;
 
 let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
+
+const boneInfo: { scientificName: string, startId: string, endId: string, offset: Vector3, offsetRotationAxis: Vector3, offsetRotationAngle: number; }[] = [
+  {
+    scientificName: "Cranium",
+    startId: "headtop_09",
+    endId: "",
+    offset: new Vector3( 0.6, -0.1, 0.3 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 35
+  },
+  {
+    scientificName: "Mandible",
+    startId: "headbot_end_0112",
+    endId: "",
+    offset: new Vector3( 0.2, -0.1, -0.15 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 45
+  },
+  {
+    scientificName: "Scapula",
+    startId: "handl1_030",
+    endId: "handl2_031",
+    offset: new Vector3( 0.05, -0.2, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 45
+  },
+  {
+    scientificName: "Humerus",
+    startId: "handl2_031",
+    endId: "handl3_032",
+    offset: new Vector3( 0.2, 0.35, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -90
+  },
+  {
+    scientificName: "Ulna",
+    startId: "handl3_032",
+    endId: "handl4_033",
+    offset: new Vector3( 0.1, -0.2, 0.1 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 60
+  },
+  {
+    scientificName: "Radius",
+    startId: "handl3_032",
+    endId: "handl4_033",
+    offset: new Vector3( -0.17, -0.2, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 60
+  },
+  {
+    scientificName: "Ilium",
+    startId: "Bone009l_070",
+    endId: "",
+    offset: new Vector3( 0.1, 0, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -10
+  },
+  {
+    scientificName: "Pubis",
+    startId: "legl1_072",
+    endId: "",
+    offset: new Vector3( 0.1, -0.1, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -15
+  },
+  {
+    scientificName: "Ischium",
+    startId: "legl034_end_0128",
+    endId: "",
+    offset: new Vector3( 0.1, 0, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -60
+  },
+  {
+    scientificName: "Femur",
+    startId: "legl2_073",
+    endId: "legl3_074",
+    offset: new Vector3( 0.2, -0.2, 0.15 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 70
+  },
+  {
+    scientificName: "Tibia",
+    startId: "legl3_074",
+    endId: "Ikfootl_end_0135",
+    offset: new Vector3( -0.1, 0.15, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -40
+  },
+  {
+    scientificName: "Fibula",
+    startId: "legl3_074",
+    endId: "Ikfootl_end_0135",
+    offset: new Vector3( 0.2, 0.1, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -40
+  },
+];
 
 init();
 addControls();
@@ -106,7 +206,7 @@ function init() {
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
-    camera.position.set( 0, 10, 20 );
+    camera.position.set( 5, 2.5, 5 );
     camera.lookAt( new Vector3( 0, 0, 0 ) );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
     cameraControls.allowRotationBelowGroundPlane = false;
@@ -155,6 +255,9 @@ function addContent() {
     directionalLight = new DirectionalLight( '#fdfbd3', 1 );
     directionalLight.position.set( 13, 7, 10 );
     directionalLight.castShadow = true;
+    directionalLight.shadow.camera.top = ( 15 );
+    directionalLight.shadow.camera.right = ( 10 );
+    directionalLight.shadow.camera.left = ( -10 );
 
     scene.add( ambientLight );
     scene.add( pointLight );
@@ -166,9 +269,14 @@ function addContent() {
     const loader = new TextureLoader( loadingManager );
     const repeatVector = new Vector2( 10, 10 );
     const wrappingMode = RepeatWrapping;
-    const texturePath = "./textures/rock_pitted_mossy/rock_pitted_mossy_";
+    const texturePath = "./textures/aerial_rocks/aerial_rocks_04_";
 
-    const floorColorTexture = loader.load( texturePath + "diff_1k.jpg" );
+    const floorAoTexture = loader.load( texturePath + "ao_1k.png" );
+    floorAoTexture.repeat = repeatVector;
+    floorAoTexture.wrapS = wrappingMode;
+    floorAoTexture.wrapT = wrappingMode;
+
+    const floorColorTexture = loader.load( texturePath + "diff_1k.png" );
     floorColorTexture.repeat = repeatVector;
     floorColorTexture.wrapS = wrappingMode;
     floorColorTexture.wrapT = wrappingMode;
@@ -194,6 +302,7 @@ function addContent() {
       displacementMap: floorDispTexture,
       normalMap: floorNormalTexture,
       roughnessMap: floorRoughTexture,
+      aoMap: floorAoTexture,
       side: 2,
     } );
     planeMaterial.onBeforeCompile = ( shader ) => {
@@ -286,7 +395,7 @@ function addContent() {
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.`;
 
     bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
-    const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
+    headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
@@ -388,16 +497,31 @@ function addContent() {
           };
         } );
 
-        // now we create a label for every animation bone
-        trikeBones!.forEach( ( bone ) => {
-          const label = new Label( bone.name, bodyFont, new Color( colors.annotationColor ) );
-          //labels.push( label );
-          label.projected = true;
-          label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
-          const boneLabelPositionOffset = new Vector3( 0.1, 0, 0 );
-          label.addTo( bone, boneLabelPositionOffset );
-          //label.position.set( boneLabelPositionOffset.x, label.position.y, label.position.z );
-          label.visible = false;
+        boneInfo.forEach( ( boneInfo ) => {
+          const animBoneStart = trikeBones.find( b => b.name == boneInfo.startId );
+          const animBoneEnd = trikeBones.find( b => b.name == boneInfo.endId );
+          if ( animBoneStart ) {
+            const label = new Label( boneInfo.scientificName, bodyFont, new Color( colors.annotationColor ) );
+            label.rotateY( Math.PI / 2 );
+            let offset = boneInfo.offset;
+            if ( animBoneEnd ) {
+              let startVec = animBoneStart.getWorldPosition( new Vector3() );
+              let endVec = animBoneEnd.getWorldPosition( new Vector3() );
+              let midpoint = new Vector3().subVectors( endVec, startVec ).multiplyScalar( 0.5 );
+              offset.add( midpoint );
+            } else {
+              console.log( boneInfo.endId );
+            }
+            if ( boneInfo.scientificName === "Ischium" )
+              label.alignment = Label.Alignment.Right;
+            const angle = ( boneInfo.offsetRotationAngle / 180 ) * Math.PI;
+            label.addTo( animBoneStart, offset, boneInfo.offsetRotationAxis, angle );
+            label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
+            label.visible = false;
+            labels.push( label );
+          } else {
+            console.warn( boneInfo.startId );
+          }
         } );
 
         scene.add( trike );
@@ -505,7 +629,7 @@ function addTrikeGui() {
   trikeFolder.add( trikeAnimationSettings, 'play' ).name( 'animated' ).onChange( () => toggleTrikeAnimation() );
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
-  trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
+  trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.3 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
   trikeFolder.addColor( colors, 'annotationColor' ).name( 'annotation color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
 }
 
