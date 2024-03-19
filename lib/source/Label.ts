@@ -213,32 +213,24 @@ class Label extends Object3D {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.color.value = this.color;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateMap() {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.map.value = this.fontFace.glyphTexture;
-    // following line might not be necessary
-    //this.material.uniforms.color.value.needsUpdate = true;
   }
 
   updateDebug() {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.debug.value = this.debugMode;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
   }
 
   updateAntialiasing() {
     if ( !this.material.uniforms )
       return;
     this.material.uniforms.aa.value = this._aa;
-    // following line might not be necessary
-    //this.material.uniforms.debug.value.needsUpdate = true;
   }
 
   createShaderMaterial( map?: Texture, color?: Color ): ShaderMaterial {
@@ -326,6 +318,7 @@ class Label extends Object3D {
       return;
     this._fontFace = fontFace;
     this._needsInitialLayout = true;
+    this._textChanged = true;
   }
 
   get length(): number {

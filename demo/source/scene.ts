@@ -191,7 +191,6 @@ addControls();
 addContent();
 addGui();
 addLabelGui();
-animate( 0 );
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -510,8 +509,6 @@ function addContent() {
               let endVec = animBoneEnd.getWorldPosition( new Vector3() );
               let midpoint = new Vector3().subVectors( endVec, startVec ).multiplyScalar( 0.5 );
               offset.add( midpoint );
-            } else {
-              console.log( boneInfo.endId );
             }
             if ( boneInfo.scientificName === "Ischium" )
               label.alignment = Label.Alignment.Right;
@@ -541,6 +538,7 @@ function addContent() {
 
         addTrikeGui();
         addControls();
+        animate( 0 );
       },
       undefined,
       function ( error ) {
@@ -645,8 +643,9 @@ function addFernGui() {
 
 function addLabelGui() {
   const folder = gui.folders[ 0 ];
+  //new MultilineController( folder, headerLabel, 'text', 4 ).name( 'header text' );
   folder.add( headerLabel, 'visible' ).name( 'header' );
-  //folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
+  folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
@@ -654,7 +653,7 @@ function addLabelGui() {
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
-  folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
+  //folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
   folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 20 ).max( 100 ).step( 10 );
   folder.add( infoLabel, 'alignment', Label.Alignment );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
