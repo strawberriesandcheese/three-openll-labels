@@ -72,12 +72,13 @@ let stats: Stats;
 let drawCallPanel: Stats.Panel;
 let gui: GUI;
 let bodyFont: FontFace;
+let headingFont: FontFace;
 
 let lastFrame: number;
 
 let trikeAnimationNames = new Array<string>;
 let trikeAnimationSettings: { animation: string, play: boolean; };
-let trikeBoneAnnotations = { enabled: false, scale: 0.1 };
+let trikeBoneAnnotations = { enabled: true, scale: 0.15 };
 
 let debugSettings = { logEnabled: false, glyphDebug: false };
 let loggingInfo = { labels: 0, drawCalls: 0 };
@@ -86,12 +87,110 @@ let numberOfLabels = 0;
 
 let colors = { headerColor: 0xf5f5f5, infoColor: 0xf5f5f5, annotationColor: 0xf5f5f5 };
 
+const boneInfo: { scientificName: string, startId: string, endId: string, offset: Vector3, offsetRotationAxis: Vector3, offsetRotationAngle: number; }[] = [
+  {
+    scientificName: "Cranium",
+    startId: "headtop_09",
+    endId: "",
+    offset: new Vector3( 0.6, -0.1, 0.3 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 35
+  },
+  {
+    scientificName: "Mandible",
+    startId: "headbot_end_0112",
+    endId: "",
+    offset: new Vector3( 0.2, -0.1, -0.15 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 45
+  },
+  {
+    scientificName: "Scapula",
+    startId: "handl1_030",
+    endId: "handl2_031",
+    offset: new Vector3( 0.05, -0.2, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 45
+  },
+  {
+    scientificName: "Humerus",
+    startId: "handl2_031",
+    endId: "handl3_032",
+    offset: new Vector3( 0.2, 0.35, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -90
+  },
+  {
+    scientificName: "Ulna",
+    startId: "handl3_032",
+    endId: "handl4_033",
+    offset: new Vector3( 0.1, -0.2, 0.1 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 60
+  },
+  {
+    scientificName: "Radius",
+    startId: "handl3_032",
+    endId: "handl4_033",
+    offset: new Vector3( -0.17, -0.2, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 60
+  },
+  {
+    scientificName: "Ilium",
+    startId: "Bone009l_070",
+    endId: "",
+    offset: new Vector3( 0.1, 0, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -10
+  },
+  {
+    scientificName: "Pubis",
+    startId: "legl1_072",
+    endId: "",
+    offset: new Vector3( 0.1, -0.1, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -15
+  },
+  {
+    scientificName: "Ischium",
+    startId: "legl034_end_0128",
+    endId: "",
+    offset: new Vector3( 0.1, 0, 0 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -60
+  },
+  {
+    scientificName: "Femur",
+    startId: "legl2_073",
+    endId: "legl3_074",
+    offset: new Vector3( 0.2, -0.2, 0.15 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: 70
+  },
+  {
+    scientificName: "Tibia",
+    startId: "legl3_074",
+    endId: "Ikfootl_end_0135",
+    offset: new Vector3( -0.1, 0.15, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -40
+  },
+  {
+    scientificName: "Fibula",
+    startId: "legl3_074",
+    endId: "Ikfootl_end_0135",
+    offset: new Vector3( 0.2, 0.1, 0.2 ),
+    offsetRotationAxis: new Vector3( 0, 0, 1 ),
+    offsetRotationAngle: -40
+  },
+];
+
 init();
 addControls();
 addContent();
 addGui();
 addLabelGui();
-animate( 0 );
 
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
@@ -106,7 +205,7 @@ function init() {
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
-    camera.position.set( 0, 10, 20 );
+    camera.position.set( 7, 1.5, 4 );
     camera.lookAt( new Vector3( 0, 0, 0 ) );
     cameraControls = new WorldInHandControls( camera, canvas, renderer, scene );
     cameraControls.allowRotationBelowGroundPlane = false;
@@ -155,6 +254,9 @@ function addContent() {
     directionalLight = new DirectionalLight( '#fdfbd3', 1 );
     directionalLight.position.set( 13, 7, 10 );
     directionalLight.castShadow = true;
+    directionalLight.shadow.camera.top = ( 15 );
+    directionalLight.shadow.camera.right = ( 10 );
+    directionalLight.shadow.camera.left = ( -10 );
 
     scene.add( ambientLight );
     scene.add( pointLight );
@@ -166,9 +268,14 @@ function addContent() {
     const loader = new TextureLoader( loadingManager );
     const repeatVector = new Vector2( 10, 10 );
     const wrappingMode = RepeatWrapping;
-    const texturePath = "./textures/rock_pitted_mossy/rock_pitted_mossy_";
+    const texturePath = "./textures/aerial_rocks/aerial_rocks_04_";
 
-    const floorColorTexture = loader.load( texturePath + "diff_1k.jpg" );
+    const floorAoTexture = loader.load( texturePath + "ao_1k.png" );
+    floorAoTexture.repeat = repeatVector;
+    floorAoTexture.wrapS = wrappingMode;
+    floorAoTexture.wrapT = wrappingMode;
+
+    const floorColorTexture = loader.load( texturePath + "diff_1k.png" );
     floorColorTexture.repeat = repeatVector;
     floorColorTexture.wrapS = wrappingMode;
     floorColorTexture.wrapT = wrappingMode;
@@ -194,6 +301,7 @@ function addContent() {
       displacementMap: floorDispTexture,
       normalMap: floorNormalTexture,
       roughnessMap: floorRoughTexture,
+      aoMap: floorAoTexture,
       side: 2,
     } );
     planeMaterial.onBeforeCompile = ( shader ) => {
@@ -280,17 +388,17 @@ function addContent() {
 
   // ===== 🆎 STATIC LABELS =====
   {
-    const triceratopsHeadingText = `Triceratops
-        	    horridus`;
+    const triceratopsHeadingText = `Triceratops\nhorridus`;
     const triceratopsWrapText =
       `With its three sharp horns and spiky head plate, Triceratops horridus must have been an intimidating presence as it trampled across western North America in the late Cretaceous period, some 69 million years ago. Despite its fierce appearance, this famous ceratopsian, or horned dinosaur, was an herbivore.`;
 
     bodyFont = new FontFaceLoader( loadingManager ).loadFromAPI( 'https://fonts.varg.dev/api/fonts/cookierun-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield' );
-    const headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
+    headingFont = new FontFaceLoader( loadingManager ).load( './fonts/dmserifdisplay/dmserifdisplay-regular' );
 
     headerLabel = new Label( triceratopsHeadingText, headingFont, new Color( colors.headerColor ) );
     headerLabel.debugMode = false;
-    headerLabel.position.set( -4, 5, 1 );
+    headerLabel.rotateY( Math.PI / 2 );
+    headerLabel.position.set( -20, 6, 3 );
     scene.add( headerLabel );
     labels.push( headerLabel );
 
@@ -300,19 +408,20 @@ function addContent() {
     const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
     sourceLabel;
     sourceLabel.fontSize = 0.5;
+    sourceLabel.projected = true;
     sourceLabel.addTo( infoLabel );
     sourceLabel.alignment = Label.Alignment.Center;
-    sourceLabel.translateGlobal( new Vector3( 0, -7.5, 0 ) );
+    sourceLabel.translateGlobal( new Vector3( 0, -11, 0 ) );
     labels.push( sourceLabel );
 
-    infoLabel.scale.set( 0.5, 0.5, 0.5 );
-    infoLabel.rotateX( -Math.PI / 2 );
+    infoLabel.scale.set( 0.1, 0.1, 0.1 );
+    infoLabel.projected = true;
     scene.add( infoLabel );
-    infoLabel.position.set( 0, 0.4, 4 );
+    infoLabel.position.set( 0, 2, 4 );
     infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
     infoLabel.wrap = true;
-    infoLabel.lineWidth = 30;
+    infoLabel.lineWidth = 20;
 
     numberOfLabels = labels.length;
   }
@@ -388,16 +497,28 @@ function addContent() {
           };
         } );
 
-        // now we create a label for every animation bone
-        trikeBones!.forEach( ( bone ) => {
-          const label = new Label( bone.name, bodyFont, new Color( colors.annotationColor ) );
-          //labels.push( label );
-          label.projected = true;
-          label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
-          const boneLabelPositionOffset = new Vector3( 0.1, 0, 0 );
-          label.addTo( bone, boneLabelPositionOffset );
-          //label.position.set( boneLabelPositionOffset.x, label.position.y, label.position.z );
-          label.visible = false;
+        boneInfo.forEach( ( boneInfo ) => {
+          const animBoneStart = trikeBones.find( b => b.name == boneInfo.startId );
+          const animBoneEnd = trikeBones.find( b => b.name == boneInfo.endId );
+          if ( animBoneStart ) {
+            const label = new Label( boneInfo.scientificName, bodyFont, new Color( colors.annotationColor ) );
+            label.rotateY( Math.PI / 2 );
+            let offset = boneInfo.offset;
+            if ( animBoneEnd ) {
+              let startVec = animBoneStart.getWorldPosition( new Vector3() );
+              let endVec = animBoneEnd.getWorldPosition( new Vector3() );
+              let midpoint = new Vector3().subVectors( endVec, startVec ).multiplyScalar( 0.5 );
+              offset.add( midpoint );
+            }
+            if ( boneInfo.scientificName === "Ischium" )
+              label.alignment = Label.Alignment.Right;
+            const angle = ( boneInfo.offsetRotationAngle / 180 ) * Math.PI;
+            label.addTo( animBoneStart, offset, boneInfo.offsetRotationAxis, angle );
+            label.scale.set( trikeBoneAnnotations.scale, trikeBoneAnnotations.scale, trikeBoneAnnotations.scale );
+            labels.push( label );
+          } else {
+            console.warn( boneInfo.startId );
+          }
         } );
 
         scene.add( trike );
@@ -417,6 +538,7 @@ function addContent() {
 
         addTrikeGui();
         addControls();
+        animate( 0 );
       },
       undefined,
       function ( error ) {
@@ -505,7 +627,7 @@ function addTrikeGui() {
   trikeFolder.add( trikeAnimationSettings, 'play' ).name( 'animated' ).onChange( () => toggleTrikeAnimation() );
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
   trikeFolder.add( trikeBoneAnnotations, 'enabled' ).name( 'enable bone annotations' ).onChange( ( value: boolean ) => toggleTrikeBoneAnnotations( value ) );
-  trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.1 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
+  trikeFolder.add( trikeBoneAnnotations, 'scale' ).min( 0 ).max( 0.3 ).step( 0.0001 ).name( 'annotation size' ).onChange( ( value: number ) => changeTrikeBoneAnnotationsSize( value ) );
   trikeFolder.addColor( colors, 'annotationColor' ).name( 'annotation color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
 }
 
@@ -521,8 +643,9 @@ function addFernGui() {
 
 function addLabelGui() {
   const folder = gui.folders[ 0 ];
+  //new MultilineController( folder, headerLabel, 'text', 4 ).name( 'header text' );
   folder.add( headerLabel, 'visible' ).name( 'header' );
-  folder.add( headerLabel, 'text' ).name( 'header text' );
+  folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
   folder.add( infoLabel, 'visible' ).name( 'info' );
@@ -530,8 +653,8 @@ function addLabelGui() {
   folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
   folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
-  folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
-  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 0 ).max( 100 ).step( 5 );
+  //folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
+  folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 20 ).max( 100 ).step( 10 );
   folder.add( infoLabel, 'alignment', Label.Alignment );
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
