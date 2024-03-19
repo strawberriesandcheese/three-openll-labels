@@ -327,7 +327,7 @@ function addContent() {
     infoLabel.scale.set( 0.5, 0.5, 0.5 );
     infoLabel.rotateX( -Math.PI / 2 );
     scene.add( infoLabel );
-    infoLabel.position.set( 0, 3, 4 );
+    infoLabel.position.set( 0, 1, 4 );
     infoLabel.lineAnchor = Label.LineAnchor.Baseline;
     infoLabel.alignment = Label.Alignment.Center;
     infoLabel.wrap = true;
