@@ -411,7 +411,7 @@ function addContent() {
     sourceLabel.projected = true;
     sourceLabel.addTo( infoLabel );
     sourceLabel.alignment = Label.Alignment.Center;
-    sourceLabel.translateGlobal( new Vector3( 0, -11, 0 ) );
+    sourceLabel.translateGlobal( new Vector3( 0, -12, 0 ) );
     labels.push( sourceLabel );
 
     infoLabel.scale.set( 0.1, 0.1, 0.1 );
