@@ -18,7 +18,7 @@
       "labels",
       "typescript"
     ],
-    "version": "0.0.8",
+    "version": "0.0.9",
     "type": "module",
     "main": "dist/three-openll-labels.js",
     "types": "dist/three-openll-labels.d.ts",
