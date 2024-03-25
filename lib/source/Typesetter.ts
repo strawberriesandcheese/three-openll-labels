@@ -54,20 +54,23 @@ class Typesetter {
 
       // first let's check if we reached a line break
       let kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
-      const feedLine = label.lineFeedAt( i ) || ( label.wrap && this.shouldWrap( label, pen, glyph, kerning ) );
+      const shouldWordWrap = label.wrap && this.shouldWrap( label, pen, glyph, kerning );
+      const feedLine = label.lineFeedAt( i ) || shouldWordWrap;
 
       if ( !firstWordOfNewLine && feedLine ) {
         // a line break as a start would be weird but not unheard of
         if ( i === 0 )
           console.warn( "trying to feed line at index 0" );
 
-        // since we reached a line break we need to go back to wrap our whole word not just its letters
-        i = lastWordEndIndex + 1;
-        // this glyph is the space character before the word that is on a new line
-        let glyph = label.textGlyphs[ i ];
-        kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
+        if ( shouldWordWrap ) {
+          // since we reached a line break due to word wrap settings we need to go back to wrap our whole word not just its letters
+          i = lastWordEndIndex + 1;
+          // this glyph is the space character before the word that is on a new line
+          let glyph = label.textGlyphs[ i ];
+          kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
+        }
 
-        // do alignment stuff for previous line
+        // align previous line
         this.alignLine( lastWordEndPen, label.alignment, lineStartGlyphIndex, i, origins, extent );
 
         pen.y -= lineHeight * label.scalingFactor;
