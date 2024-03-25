@@ -111,11 +111,7 @@ class Label extends Object3D {
         }
 
         if ( this._needsInitialLayout && this.fontFace.ready ) {
-          this._needsLayout = true;
-          this._needsInitialLayout = false;
-          this.updateMap();
-          this.mesh.material = this.material;
-          this.updateColor();
+          this.initialize();
         }
 
         if ( this._needsLayout && this.fontFace.ready ) {
@@ -141,6 +137,13 @@ class Label extends Object3D {
       }
     }
     this.textGlyphs = glyphArray;
+  }
+
+  initialize() {
+    this._needsLayout = true;
+    this._needsInitialLayout = false;
+    this.updateMap();
+    this.updateColor();
   }
 
   layout() {
