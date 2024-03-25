@@ -7,6 +7,6 @@
     "dev": "npm run dev -w demo",
     "build": "npm run build --workspaces",
     "bundle": "npm pack -w lib",
-    "publish": "npm run publish -w lib"
+    "publish": "npm publish -w lib"
   }
 }
