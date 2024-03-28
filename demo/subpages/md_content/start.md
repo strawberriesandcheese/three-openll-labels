@@ -12,8 +12,8 @@ Since three.js is supposed to facillitate fast prototyping and creating 3D scene
 
 ## What can I do with it?
 
+<video src="../media/demo.webm" controls></video>
+
 ## How does it work?
 
-## Demo Video
-maybe single videos used to highlight specific videos in previous section
-![test](../media/screenshot_wip.png)
+TODO

@@ -12,6 +12,6 @@ body {
   margin: auto;
 }
 
-img {
+img,video {
   width: 100%;
 }

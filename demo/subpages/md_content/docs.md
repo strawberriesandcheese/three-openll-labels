@@ -99,5 +99,4 @@ scene.add(cube); //attached label is automatically also added to scene
 
 ## Installation
 
-
-stuff
+TODO

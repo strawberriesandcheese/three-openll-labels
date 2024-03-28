@@ -98,14 +98,6 @@ scene.add(cube); //attached label is automatically also added to scene
 - ```projected```: labels automatically turn to camera viewport when true
 - ```text```: change text content
 
-## Stuff included in the `scene.ts`
-<img width="796" alt="screenshot" src="assets/screenshot_wip.png">
-
-- [x] Triceratops
-- [x] Triceratops Animations
-- [x] Labels
-- [x] Animated Labels
-
 ## Tech Stack
 
 - Three.js

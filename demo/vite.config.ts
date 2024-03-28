@@ -16,7 +16,8 @@ const md = markdownit( {
     }
 
     return ''; // use external default escaping
-  }
+  },
+  html: true
 } );
 md.use( mdAnchorPlugin );
 
