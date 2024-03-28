@@ -629,7 +629,6 @@ function addTrikeGui() {
 
 function addLabelGui() {
   const folder = gui.folders[ 0 ];
-  //new MultilineController( folder, headerLabel, 'text', 4 ).name( 'header text' );
   folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
@@ -640,7 +639,6 @@ function addLabelGui() {
   } );
   folder.add( infoLabel, 'aa' ).name( 'info antialiasing' ).onChange( ( value: boolean ) => sourceLabel.aa = value );
   folder.add( infoLabel, 'wrap' ).name( 'word wrap' ).onChange( ( value: boolean ) => sourceLabel.wrap = value );
-  //folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
   folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 20 ).max( 100 ).step( 10 );
   folder.add( infoLabel, 'alignment', Label.Alignment ).onChange( ( value: Label.Alignment ) => sourceLabel.alignment = value );;
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
