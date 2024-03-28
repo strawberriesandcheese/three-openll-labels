@@ -70,7 +70,7 @@ cube.add(label); //-> previous position and rotation will be reset
 	- You can use the same methods you usually do when handling objects in your scene.
 2. Label is attached to different object in scene
 	- If you want to move/rotate the Label independent to its parent object but still want to keep its animation attached (e.g. when annotation animation bones) you can use the methods ```label.setGlobalRotation(THREE.Quaternion)``` and ```label.translateGlobal(THREE.Vector3)```.
-### 5. Add Label to scene
+### 5. Add label to scene
 - Depending on whether you attached your label to a parent object or kept it by itself you have to add it to your scene just like any other ```THREE.Object3D```.
 ```ts
 import { FontFaceLoader, Label } from three-openll-labels;
