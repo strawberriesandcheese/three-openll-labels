@@ -1,0 +1,17 @@
+body {
+  font-family: sans-serif;
+  line-height: 120%;
+  background-color: #f0f2f5;
+  color: rgb(17, 19, 23);
+}
+
+#markdown-content {
+  height: 100vh;
+  padding-top: 1em;
+  max-width: 60em;
+  margin: auto;
+}
+
+img {
+  width: 100%;
+}

@@ -4,8 +4,13 @@
   "main": "scene.ts",
   "license": "MIT",
   "devDependencies": {
+    "@types/markdown-it": "^13.0.7",
     "@world-in-hand-controls/threejs-world-in-hand": "^0.0.8",
-    "lil-gui": "^0.19.1"
+    "highlight.js": "^11.9.0",
+    "lil-gui": "^0.19.1",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^8.6.7",
+    "vite-plugin-markdown": "^2.2.0"
   },
   "dependencies": {
     "@types/three": "^0.158.1",

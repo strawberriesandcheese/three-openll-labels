@@ -1,13 +1,8 @@
-# three-openll-labels
+# Documentation
 
-Adds labelling capabilities using signed distance field rendering of fonts to three.js
-
-Based on [webgl-operate]() and [openll-cpp]() implementations of labelling.
-  
-- [Demo](https://strawberriesandcheese.github.io/three-openll-labels/)
-- [Jump to Usage](#usage)
 
 ## Usage
+
 
 ### 0. Acquire font resource files
 1. Host file yourself (recommended)
@@ -31,13 +26,17 @@ Based on [webgl-operate]() and [openll-cpp]() implementations of labelling.
 	import { FontFaceLoader } from three-openll-labels;
 	
 	// you can use either of the links the API supplies directly or you can point to their parent directory
-	const fontFace = fontFaceLoader(loadingManager).loadFromAPI('https://fonts.varg.dev/api/fonts/[font name]/[hash]/distancefield');
-	const fontFace = fontFaceLoader(loadingManager).loadFromAPI('https://fonts.varg.dev/api/fonts/[font name]/[hash]/fontdescription');
+	const fontFace = fontFaceLoader(loadingManager)
+      .loadFromAPI('https://fonts.varg.dev/api/fonts/[font name]/[hash]/distancefield');
+	const fontFace = fontFaceLoader(loadingManager)
+      .loadFromAPI('https://fonts.varg.dev/api/fonts/[font name]/[hash]/fontdescription');
 	// if you point to the parent directory forgo the ending slash
-	const fontFace = fontFaceLoader(loadingManager).loadFromAPI('https://fonts.varg.dev/api/fonts[font name]/[hash]');
+	const fontFace = fontFaceLoader(loadingManager)
+      .loadFromAPI('https://fonts.varg.dev/api/fonts[font name]/[hash]');
 
 	// example working link
-	const fontFace = fontFaceLoader(loadingManager).loadFromAPI('https://fonts.varg.dev/api/fonts/roboto-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93/distancefield');
+	const fontFace = fontFaceLoader(loadingManager)
+      .loadFromAPI('https://fonts.varg.dev/api/fonts/roboto-regular.ttf/5b932794dbdddf34e80eca00ba9a0b93');
 	```
 ### 2. Create a label
 - At creation a Label gets the text it displays, the font face which is used and its text color. By default the color is black.
@@ -98,56 +97,7 @@ scene.add(cube); //attached label is automatically also added to scene
 - ```projected```: labels automatically turn to camera viewport when true
 - ```text```: change text content
 
-## Stuff included in the `scene.ts`
-<img width="796" alt="screenshot" src="assets/screenshot_wip.png">
+## Installation
 
-- [x] Triceratops
-- [x] Triceratops Animations
-- [x] Labels
-- [x] Animated Labels
 
-## Tech Stack
-
-- Three.js
-- TypeScript
-- GLSL
-- Vite
-- OpenLL
-
-## CLI Commands
-
-Library Installation
-
-```bash
-npm i
-```
-
-Run dev mode
-
-```bash
-npm run dev
-```
-
-Build
-
-```bash
-npm run build
-```
-
-Build library only
-
-```bash
-npm run build -w lib
-```
-
-Build demo only
-
-```bash
-npm run build -w demo
-```
-
-Run demo build
-
-```bash
-npm run preview -w demo
-```
+stuff

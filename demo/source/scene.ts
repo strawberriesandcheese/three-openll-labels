@@ -36,7 +36,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { WorldInHandControls } from '@world-in-hand-controls/threejs-world-in-hand';
 
-import './style.css';
+import '../css/style.css';
 
 import { Label, FontFace, FontFaceLoader } from '../../lib/source/main';
 import { MultilineController } from './helpers/multilineController';
@@ -46,6 +46,7 @@ base.href = import.meta.env.BASE_URL;
 document.head.insertBefore( base, document.head.firstChild );
 
 let canvas: HTMLCanvasElement;
+let loadingBar: HTMLProgressElement;
 let renderer: WebGLRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
@@ -195,7 +196,10 @@ addLabelGui();
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
-    canvas = document.querySelector( `canvas` )!;
+    canvas = document.getElementById( `canvas` )! as HTMLCanvasElement;
+    loadingBar = document.querySelector( 'progress' )!;
+    loadingBar.style.display = '';
+    loadingBar.max = 100;
     renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
     renderer.shadowMap.enabled = true;
@@ -222,15 +226,20 @@ function addContent() {
 
     loadingManager.onStart = () => {
       console.log( 'loading started' );
+      loadingBar.value = 0;
     };
     loadingManager.onProgress = ( url, loaded, total ) => {
       console.log( 'loading in progress:' );
       console.log( `${ url } -> ${ loaded } / ${ total }` );
+      loadingBar.value = ( loaded / total ) * 100;
+      loadingBar.labels[ 0 ].textContent = url;
     };
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
       //@ts-expect-error
       scene.dispatchEvent( { type: 'change' } );
+      loadingBar.value = 0;
+      loadingBar.labels[ 0 ].textContent = '';
     };
     loadingManager.onError = ( error ) => {
       console.log( '❌ error while loading:', error );
@@ -539,6 +548,8 @@ function addContent() {
         addTrikeGui();
         addControls();
         animate( 0 );
+        canvas.style.display = 'block';
+        loadingBar.style.display = 'none';
       },
       undefined,
       function ( error ) {
@@ -749,7 +760,6 @@ function debugLog( enabled: boolean ) {
 
 function animate( timeStamp: number ) {
   requestAnimationFrame( animate );
-
   if ( lastFrame === undefined )
     lastFrame = timeStamp;
   const deltaTime = timeStamp - lastFrame;
@@ -778,5 +788,4 @@ function animate( timeStamp: number ) {
   debugLog( debugSettings.logEnabled );
 
   cameraControls.update();
-
 }

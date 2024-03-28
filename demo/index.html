@@ -3,37 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="threejs-icon.svg" />
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/header.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SDF Font-Rendering Three.js</title>
+    <title>three-openll-labels</title>
+    
   </head>
-  <body>
-    <div id="info">
-      strawberriesandcheese - 
-      <a href="https://github.com/strawberriesandcheese/three-openll-labels" target="_blank" rel="noopener">three-openll-labels</a> 
-    </div>
-
-    <div>
-      <canvas></canvas>
-    </div>
-    <script type="module" src="source/scene.ts"></script>
-
-    <dialog id="sources">
-      <div>
-        <h3>3D-Models</h3>
-          <h4>Fern:</h4>
-            <a href="https://skfb.ly/oNSsB"><b>fern grass 02</b></a> by <i>Digital screen official</i><br> is licensed under <a href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution</a>. 
-          <h4>Palms:</h4>
-            <a href="https://skfb.ly/6oKFX"><b>Palms</b></a> by <i>BaptisteBerard</i><br> is licensed under <a href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution</a>. 
+  <body id="main">
+    <div id="page-container">
+      <div id="header">
+        <a 
+          href="./subpages/start.html"
+          target="content" 
+          id="start" 
+          ><b>Home</b></a>
+          <a 
+          href="./subpages/documentation.html" 
+          target="content" 
+          id="documentation" ><b>Docs</b></a>
+          <a 
+            href="./subpages/triceratops.html"
+            target="content" 
+            id="demo" 
+            ><b>Demo</b></a> 
       </div>
-      <div>
-        <h3>Fonts</h3>
-          <h4>Header:</h4>
-            <a href="https://fonts.google.com/specimen/DM+Serif+Display"><b>DM Serif Display</b></a> by <i>Colophon Foundry</i><br> is licensed under <a href="https://openfontlicense.org/">Open Font License</a>. 
-          <h4>Body:</h4> 
-            <a href="https://www.cookierunfont.com"><b>CookieRun</b></a> by <i>Devsisters</i><br> is licensed under <a download="License_ko_en" href="CookieRunLicense.pdf">CookieRun License</a>. 
-      </div>
-      <button name="close" type="reset">Close</button>
-    </dialog>
-
+      <iframe name="content" src="./subpages/start.html">
+      </iframe>
+    </div>
   </body>
 </html>
