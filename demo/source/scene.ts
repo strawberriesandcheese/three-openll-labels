@@ -36,7 +36,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { WorldInHandControls } from '@world-in-hand-controls/threejs-world-in-hand';
 
-import './style.css';
+import '../css/style.css';
 
 import { Label, FontFace, FontFaceLoader } from '../../lib/source/main';
 import { MultilineController } from './helpers/multilineController';
@@ -46,6 +46,7 @@ base.href = import.meta.env.BASE_URL;
 document.head.insertBefore( base, document.head.firstChild );
 
 let canvas: HTMLCanvasElement;
+let loadingBar: HTMLProgressElement;
 let renderer: WebGLRenderer;
 let scene: Scene;
 let loadingManager: LoadingManager;
@@ -59,6 +60,7 @@ let trikeBones: Bone[];
 let labels = new Array<Label>;
 let headerLabel: Label;
 let infoLabel: Label;
+let sourceLabel: Label;
 let plane: Mesh;
 let gridHelper: GridHelper;
 let palm: Group;
@@ -195,7 +197,10 @@ addLabelGui();
 function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
-    canvas = document.querySelector( `canvas` )!;
+    canvas = document.getElementById( `canvas` )! as HTMLCanvasElement;
+    loadingBar = document.querySelector( 'progress' )!;
+    loadingBar.style.display = '';
+    loadingBar.max = 100;
     renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
     renderer.shadowMap.enabled = true;
@@ -222,15 +227,20 @@ function addContent() {
 
     loadingManager.onStart = () => {
       console.log( 'loading started' );
+      loadingBar.value = 0;
     };
     loadingManager.onProgress = ( url, loaded, total ) => {
       console.log( 'loading in progress:' );
       console.log( `${ url } -> ${ loaded } / ${ total }` );
+      loadingBar.value = ( loaded / total ) * 100;
+      loadingBar.labels[ 0 ].textContent = url;
     };
     loadingManager.onLoad = () => {
       console.log( 'loaded!' );
       //@ts-expect-error
       scene.dispatchEvent( { type: 'change' } );
+      loadingBar.value = 0;
+      loadingBar.labels[ 0 ].textContent = '';
     };
     loadingManager.onError = ( error ) => {
       console.log( '❌ error while loading:', error );
@@ -360,8 +370,6 @@ function addContent() {
         fern.translateY( 0.3 );
         fern.translateZ( 1 );
         scene.add( fern );
-
-        addFernGui();
       }
     );
     loader.load(
@@ -380,8 +388,6 @@ function addContent() {
         palm.translateZ( -5 );
         palm.rotateY( - Math.PI / 3 );
         scene.add( palm );
-
-        addPalmGui();
       }
     );
   }
@@ -405,7 +411,7 @@ function addContent() {
     infoLabel = new Label( triceratopsWrapText, bodyFont, new Color( colors.infoColor ) );
     labels.push( infoLabel );
 
-    const sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
+    sourceLabel = new Label( 'https://www.nationalgeographic.com/animals/facts/triceratops-horridus', bodyFont, infoLabel.color );
     sourceLabel;
     sourceLabel.fontSize = 0.5;
     sourceLabel.projected = true;
@@ -539,6 +545,8 @@ function addContent() {
         addTrikeGui();
         addControls();
         animate( 0 );
+        canvas.style.display = 'block';
+        loadingBar.style.display = 'none';
       },
       undefined,
       function ( error ) {
@@ -561,9 +569,6 @@ function addControls() {
 function addGui() {
   gui.addFolder( 'Labels' );
   gui.addFolder( 'Triceratops' );
-
-  const envFolder = gui.addFolder( 'Environment' );
-  envFolder.add( plane, 'visible' ).name( 'plane' );
 
   const lightsFolder = gui.addFolder( 'Lights' );
   lightsFolder.add( pointLight, 'visible' ).name( 'point light' );
@@ -614,15 +619,6 @@ function addGui() {
 
 function addTrikeGui() {
   const trikeFolder = gui.folders[ 1 ];
-  trikeFolder.add( trike, 'visible' ).name( 'show' );
-
-  trikeFolder.add( trike.position, 'x' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos x' );
-  trikeFolder.add( trike.position, 'y' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos y' );
-  trikeFolder.add( trike.position, 'z' ).min( -5 ).max( 5 ).step( 0.1 ).name( 'pos z' );
-
-  trikeFolder.add( trike.rotation, 'x', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate x' );
-  trikeFolder.add( trike.rotation, 'y', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate y' );
-  trikeFolder.add( trike.rotation, 'z', -Math.PI * 2, Math.PI * 2, Math.PI / 4 ).name( 'rotate z' );
 
   trikeFolder.add( trikeAnimationSettings, 'play' ).name( 'animated' ).onChange( () => toggleTrikeAnimation() );
   trikeFolder.add( trikeAnimationSettings, "animation", trikeAnimationNames ).name( 'animation' ).onChange( ( value: string ) => changeTrikeAnimation( value ) );
@@ -631,31 +627,20 @@ function addTrikeGui() {
   trikeFolder.addColor( colors, 'annotationColor' ).name( 'annotation color' ).onChange( ( value: number ) => updateTrikeBoneAnnotationsColor( value ) );
 }
 
-function addPalmGui() {
-  const folder = gui.folders[ 2 ];
-  folder.add( palm, 'visible' ).name( 'palm' );
-}
-
-function addFernGui() {
-  const folder = gui.folders[ 2 ];
-  folder.add( fern, 'visible' ).name( 'fern' );
-}
-
 function addLabelGui() {
   const folder = gui.folders[ 0 ];
-  //new MultilineController( folder, headerLabel, 'text', 4 ).name( 'header text' );
-  folder.add( headerLabel, 'visible' ).name( 'header' );
   folder.add( headerLabel, 'fontFace', { headingFont, bodyFont } ).name( 'header font' );
   folder.addColor( colors, 'headerColor' ).name( 'header color' ).onChange( ( value: number ) => headerLabel.color = new Color( value ) );
   folder.add( headerLabel, 'aa' ).name( 'header antialiasing' );
-  folder.add( infoLabel, 'visible' ).name( 'info' );
   new MultilineController( folder, infoLabel, 'text', 4 ).name( 'info text' );
-  folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => infoLabel.color = new Color( value ) );
-  folder.add( infoLabel, 'aa' ).name( 'info antialiasing' );
-  folder.add( infoLabel, 'wrap' ).name( 'word wrap' );
-  //folder.add( infoLabel, 'fontSize' ).name( 'fontSize' ).min( 0.5 ).max( 5 ).step( 0.5 );
+  folder.addColor( colors, 'infoColor' ).name( 'info color' ).onChange( ( value: number ) => {
+    infoLabel.color = new Color( value );
+    sourceLabel.color = infoLabel.color;
+  } );
+  folder.add( infoLabel, 'aa' ).name( 'info antialiasing' ).onChange( ( value: boolean ) => sourceLabel.aa = value );
+  folder.add( infoLabel, 'wrap' ).name( 'word wrap' ).onChange( ( value: boolean ) => sourceLabel.wrap = value );
   folder.add( infoLabel, 'lineWidth' ).name( 'line width' ).min( 20 ).max( 100 ).step( 10 );
-  folder.add( infoLabel, 'alignment', Label.Alignment );
+  folder.add( infoLabel, 'alignment', Label.Alignment ).onChange( ( value: Label.Alignment ) => sourceLabel.alignment = value );;
   folder.add( debugSettings, 'glyphDebug' ).name( 'glyph debug view' ).onChange( ( value: boolean ) => toggleGlyphDebugView( value ) );
 }
 
@@ -749,7 +734,6 @@ function debugLog( enabled: boolean ) {
 
 function animate( timeStamp: number ) {
   requestAnimationFrame( animate );
-
   if ( lastFrame === undefined )
     lastFrame = timeStamp;
   const deltaTime = timeStamp - lastFrame;
@@ -778,5 +762,4 @@ function animate( timeStamp: number ) {
   debugLog( debugSettings.logEnabled );
 
   cameraControls.update();
-
 }

@@ -1,0 +1,90 @@
+#canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  outline: none;
+
+  background-image: url(../../assets/screenshot_wip.png);
+  background-repeat:no-repeat;
+  background-size:cover;
+}
+
+textarea {
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    pointer-events: auto;
+    box-sizing: border-box;
+    margin: 0;
+    -webkit-tap-highlight-color: transparent;
+    border: 0;
+    outline: none;
+    font-family: var(--font-family);
+    font-size: var(--input-font-size);
+    border-radius: var(--widget-border-radius);
+    background: var(--widget-color);
+    width: 100%;
+    padding: var(--widget-padding);
+    color: var(--string-color);
+    resize: none;
+}
+
+progress {
+  --_track-size: min(10000px, 1ex);
+  --_radius: 1e3px;
+
+  /*  reset  */
+  appearance: none;
+  border: none;
+
+  position: absolute;
+  height: var(--_track-size);
+  border-radius: var(--_radius);
+  overflow: hidden;
+
+  font-size: 4em;
+
+  top:0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+    
+  margin: auto;
+}
+
+/* progress[max="100"][value="100"]::before {
+  content: "✓";
+  
+  position: absolute;
+  inset-block: 0;
+  inset-inline: auto 0;
+  display: flex;
+  align-items: center;
+  padding-inline-end: max(calc(var(--_track-size) / 4), 3px);
+
+  color: white;
+  font-size: calc(var(--_track-size) / 1.25);
+} */
+
+#loading {
+  width: 100vw;
+  height: 8em;
+    
+  position: absolute;
+  top:0;
+  bottom: -40em;
+  left: 0;
+  right: 0;
+    
+  margin: auto;
+}
+
+#loadingLabel {
+  font-weight: bold;
+  display: block;
+  text-align: center;
+  line-height: 150%;
+  font-size: 1em;
+
+  margin-top: 1em;
+}
