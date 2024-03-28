@@ -149,5 +149,5 @@ npm run build -w demo
 Run demo build
 
 ```bash
-npm run preview -w demo
+npm run preview
 ```
