@@ -62,11 +62,13 @@ class Typesetter {
         if ( i === 0 )
           console.warn( "trying to feed line at index 0" );
 
+        let glyph = label.textGlyphs[ i ];
+
         if ( shouldWordWrap ) {
           // since we reached a line break due to word wrap settings we need to go back to wrap our whole word not just its letters
           i = lastWordEndIndex + 1;
           // this glyph is the space character before the word that is on a new line
-          let glyph = label.textGlyphs[ i ];
+          glyph = label.textGlyphs[ i ];
           kerning = ( i != glyphStart ? label.textGlyphs[ i - 1 ].kerning( glyph.codepoint ) : 0 );
         }
 
