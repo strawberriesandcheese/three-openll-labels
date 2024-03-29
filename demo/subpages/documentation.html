@@ -6,31 +6,38 @@
     <link rel="stylesheet" href="../css/docs.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SDF Font-Rendering Three.js</title>
+    <base target="_parent"/>
     <script type="module">
       import "highlight.js/styles/stackoverflow-light.min.css"
-      import { html } from './md_content/docs.md';
+      import { html, toc } from './md_content/docs.md';
       document.getElementById("markdown-content").innerHTML = html;
+      console.log(toc)
+
+      const tocContainer = document.getElementById("sidebar");
+      toc.forEach((t) => {
+        const href = t.content
+          .replaceAll(' ', '-')
+          .toLowerCase();
+        const a = document.createElement('a');
+        a.href = "#" + href;
+        a.target = "_self";
+        const innerText = t.content
+          .replaceAll('(optional) ', '')
+          .replaceAll(/\d\.\s/g, '');
+        a.innerText = innerText;
+        
+        const div = document.createElement('div');
+        div.classList.add("sidebarLevel" + t.level);
+        div.appendChild(a);
+        sidebar.appendChild(div);
+      })
     </script>
   </head>
   <body>
     <div class="docs-container">
-      <div class="sidebar">
-        <div><h1>Quick Navigation</h1></div>
-        <div><i><a href="#usage">Usage</a></i></div>
-        <div><a href="#0.-acquire-font-resource-files">Get Fonts</a></div>
-        <div><a href="#1.-load-a-font">Load Fonts</a></div>
-        <div><a href="#2.-create-a-label">Create Labels</a></div>
-        <div><a href="#3.-(optional)-attach-label-to-other-objects-in-scene">Attach Labels</a></div>
-        <div><a href="#4.-(optional)-adjust-position-and-rotation-of-label-in-scene">Reposition Labels</a></div>
-        <div><a href="#5.-add-label-to-scene">Add Label to Scene</a></div>
-        <div><a href="#6.-settings">Settings</a></div>
-        <br>
-        <div><i><a href="#installation">Demo Installation</a></i></div>
-        <div><a href="#0.-acquire-font-resource-files">Get Fonts</a></div>
-      </div>
+      <div class="sidebar" id="sidebar"></div>
       <div id="markdown-container">
-        <div id="markdown-content"> </div>
-        <br>
+        <div id="markdown-content"></div>
       </div>
     </div>
   </body>

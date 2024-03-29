@@ -24,7 +24,7 @@ md.use( mdAnchorPlugin );
 export default defineConfig( {
   base: '/three-openll-labels/',
   plugins: [ mdVitePlugin( {
-    mode: [ Mode.HTML ],
+    mode: [ Mode.HTML, Mode.TOC ],
     markdownIt: md
 
   } ) ],
