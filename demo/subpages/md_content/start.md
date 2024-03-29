@@ -12,7 +12,7 @@ Since three.js is supposed to facillitate fast prototyping and creating 3D scene
 
 ## What can I do with it?
 
-<video src="/media/demo.webm" controls></video>
+<video src="./media/demo.webm" controls></video>
 
 Please check out the <a href="./documentation.html" target="_self">Docs</a> for information on how to use these feature in your own projects.
 
@@ -22,7 +22,7 @@ This plugin uses [Signed-Distance-Field](https://en.wikipedia.org/wiki/Signed_di
 Here you can see an example texture atlas (left) and an example description (right):
 
 <div class="columns">
-<img src="/media/roboto-regular-atlas.png">
+<img src="./media/roboto-regular-atlas.png">
 
 ```elm
 info face="Roboto Regular" size=64 bold=0 italic=0 charset="unic" unicode=1 padding=4,4,4,4 spacing=0,0 

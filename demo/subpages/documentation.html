@@ -11,8 +11,6 @@
       import "highlight.js/styles/stackoverflow-light.min.css"
       import { html, toc } from './md_content/docs.md';
       document.getElementById("markdown-content").innerHTML = html;
-      console.log(toc)
-
       const tocContainer = document.getElementById("sidebar");
       toc.forEach((t) => {
         const href = t.content
