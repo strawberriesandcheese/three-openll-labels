@@ -198,8 +198,8 @@ function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
     canvas = document.getElementById( `canvas` )! as HTMLCanvasElement;
-    loadingBar = document.querySelector( 'progress' )!;
-    loadingBar.style.display = '';
+    loadingBar = document.getElementById( 'loadingBar' )! as HTMLProgressElement;
+    //loadingBar.style.display = '';
     loadingBar.max = 100;
     renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
@@ -239,8 +239,8 @@ function addContent() {
       console.log( 'loaded!' );
       //@ts-expect-error
       scene.dispatchEvent( { type: 'change' } );
-      loadingBar.value = 0;
-      loadingBar.labels[ 0 ].textContent = '';
+      document.getElementById( 'loading' )!.style.display = 'none';
+      canvas.style.display = 'block';
     };
     loadingManager.onError = ( error ) => {
       console.log( '❌ error while loading:', error );
@@ -545,8 +545,6 @@ function addContent() {
         addTrikeGui();
         addControls();
         animate( 0 );
-        canvas.style.display = 'block';
-        loadingBar.style.display = 'none';
       },
       undefined,
       function ( error ) {
