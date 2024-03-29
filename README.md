@@ -8,8 +8,6 @@ The labelling API is based on [webgl-operate](https://github.com/cginternals/web
 - [Demo](https://strawberriesandcheese.github.io/three-openll-labels/subpages/triceratops.html)
 - [Documentation](https://strawberriesandcheese.github.io/three-openll-labels/subpages/documentation.html)
 
-<video src="/media/demo.webm" autoplay controls></video>
-
 ## Usage
 
 ### 0. Acquire font resource files
@@ -109,7 +107,7 @@ scene.add(cube); //attached label is automatically also added to scene
 
 ### Use the library in your own project
 1. Install with `npm i three-openll-labels`
-2. Use as directed in <a href="#usage" target="_self">Usage</a>
+2. Use as directed in [Usage](#Usage)
 
 ### Contributing to the library
 1. Clone [repository](https://github.com/strawberriesandcheese/three-openll-labels)
