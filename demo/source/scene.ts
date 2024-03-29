@@ -199,7 +199,6 @@ function init() {
   {
     canvas = document.getElementById( `canvas` )! as HTMLCanvasElement;
     loadingBar = document.getElementById( 'loadingBar' )! as HTMLProgressElement;
-    //loadingBar.style.display = '';
     loadingBar.max = 100;
     renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
     renderer.setPixelRatio( Math.min( window.devicePixelRatio, 2 ) );
