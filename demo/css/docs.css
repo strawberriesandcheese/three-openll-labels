@@ -1,7 +1,7 @@
 body {
   font-family: sans-serif;
   line-height: 120%;
-  background-color: #f0f2f5;
+  background-color: #fcfcfc;
   color: rgb(17, 19, 23);
   margin: 0;
 }
@@ -44,7 +44,7 @@ li {
   height: 100vh;
   width: 170px;
   padding-top: 0.1em;
-  background-color: #e6e6e6;
+  background-color: #f2f2f2;
 }
 
 .sidebar div {

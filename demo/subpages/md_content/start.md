@@ -4,13 +4,11 @@ This extension adds 2D labels to three.js, allowing users to easily create annot
 
 The labelling API is based on [webgl-operate](https://github.com/cginternals/webgl-operate/tree/master/source/text) and [openll-cpp](https://github.com/cginternals/openll-cpp/tree/master) implementations of [OpenLL](https://openll.org/).
 
-## Why do we need it?
+## Why do I need it?
 
 Three.js offers [different options to create text](https://threejs.org/docs/#manual/en/introduction/Creating-text), but most are not easy to seamlessly use in a scene. An alternative is using [TextGeometry](https://threejs.org/docs/#examples/en/geometries/TextGeometry), a vertex-based geometry whose complexity rises when trying to have smooth round letters without aliasing effects. Additionally TextGeometry results in 3D text which is unnecessarily distracting when just trying to visualize data.
 
-Since three.js is supposed to facillitate fast prototyping and creating 3D scenes without the need for an extensive background in computer graphics
-
-TODO: finish sentence
+Since three.js is supposed to facillitate fast prototyping and creating 3D scenes without the need for an extensive background in computer graphics, a straight forward way to label scenes is very important. This extension provides a simple way to add high-quality 2D labels to a three.js scene.
 
 ## What can I do with it?
 
@@ -47,7 +45,7 @@ Every label consists of a number of glyphs. Glyphs are the individual letters an
 
 The texture atlas is used in the fragment shader to convert our previous glyph-sized rectangles to actual symbols. We sample the texture using the position supplied in the description file and compare the result to a threshold to decide whether a fragment is inside or outside the glyph. We discard all outside fragments and color only the inside fragments based on the label color.
 
-Each instanced glyph needs to be moved to its position in the text. When a label is created or when its text changes it uses the ```Typesetter``` to calculate these positions.
+Each instanced glyph needs to be moved to its position in the text. When a label is created or when its text changes it uses the ```Typesetter``` to calculate these positions. The typesetter iterates over all glyphs in a label, placing characters based on the font information such as advance and kerning. It also implements automatic and manual line wrapping.
 
 Following is a simplified version of the typesetter logic. 
 ```wren
