@@ -100,3 +100,5 @@ scene.add(cube); //attached label is automatically also added to scene
 ## Installation
 
 TODO
+
+TODO: fix links in table of contents

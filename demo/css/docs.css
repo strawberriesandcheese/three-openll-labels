@@ -29,14 +29,15 @@ li {
 
 #markdown-container {
   flex: 1;
-  height: 100vh;
+  height: 100%;
   overflow-y: scroll;
-  padding-top: 1em;
 }
 
 #markdown-content {
   max-width: 50em;
   margin: auto;
+  padding-top: 1em;
+  padding-bottom: 1em;
 }
 
 .sidebar {

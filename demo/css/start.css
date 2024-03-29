@@ -3,15 +3,44 @@ body {
   line-height: 120%;
   background-color: #f0f2f5;
   color: rgb(17, 19, 23);
+  margin: 0;
 }
 
 #markdown-content {
-  height: 100vh;
+  height: 100%;
   padding-top: 1em;
+  padding-bottom: 1em;
   max-width: 60em;
   margin: auto;
 }
 
-img,video {
+video {
   width: 100%;
+}
+
+.columns {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.columns pre {
+  flex-shrink: 1;
+  margin-top: 0;
+  margin-bottom: 0;
+  overflow-x: scroll;
+}
+
+.columns img {
+  flex-shrink: 3;
+  min-width: 10px;
+  min-height: 10px;
+}
+
+pre {
+  border: 1px solid #c9d1d9;
+  border-radius: 4px;
+  padding: 1em;
+  background-color: rgb(246, 246, 246);
+  color: rgb(47, 51, 55);
 }
