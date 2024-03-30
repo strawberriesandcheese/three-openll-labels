@@ -198,6 +198,7 @@ function init() {
   // ===== 🖼️ CANVAS, RENDERER, & SCENE =====
   {
     canvas = document.getElementById( `canvas` )! as HTMLCanvasElement;
+    canvas.style.display = 'none';
     loadingBar = document.getElementById( 'loadingBar' )! as HTMLProgressElement;
     loadingBar.max = 100;
     renderer = new WebGLRenderer( { canvas: canvas, antialias: true, alpha: true } );
@@ -731,6 +732,9 @@ function debugLog( enabled: boolean ) {
 
 function animate( timeStamp: number ) {
   requestAnimationFrame( animate );
+  if ( canvas.style.display === 'none' )
+    return;
+
   if ( lastFrame === undefined )
     lastFrame = timeStamp;
   const deltaTime = timeStamp - lastFrame;
