@@ -207,6 +207,7 @@ function init() {
     renderer.shadowMap.type = PCFSoftShadowMap;
     renderer.outputColorSpace = SRGBColorSpace;
     scene = new Scene();
+    scene.translateY( -1 );
     gui = new GUI( { title: '🐞 Debug GUI', width: 300 } );
     gui.close();
     camera = new PerspectiveCamera( 50, canvas.clientWidth / canvas.clientHeight, 0.1, 2000 );
