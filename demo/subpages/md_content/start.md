@@ -18,7 +18,7 @@ Please check out the <a href="./documentation.html" target="_self">Docs</a> for 
 
 ## How does it work?
 
-This plugin uses [Signed-Distance-Field](https://en.wikipedia.org/wiki/Signed_distance_function#Applications) based font rendering. Each font is parsed into a description file and a texture atlas by the [font service](https://fonts.varg.dev/). The description file contains size properties for each glyph (A, b, ?, etc.) which can be used to calculate most of the instance data for the vertex shader. It also contains the position at which the glyph can be found in the texture atlas.
+This plugin uses [Signed-Distance-Field](https://en.wikipedia.org/wiki/Signed_distance_function#Applications) based font rendering. Each font needs to be converted into a description file and a texture atlas by the [font service](https://fonts.varg.dev/) beforehand. The description file contains size properties for each glyph (A, b, ?, etc.) which can be used to calculate most of the instance data for the vertex shader. It also contains the position at which the glyph can be found in the texture atlas.
 Here you can see an example texture atlas (left) and an example description (right):
 
 <div class="columns">
