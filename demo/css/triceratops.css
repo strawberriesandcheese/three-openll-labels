@@ -26,19 +26,13 @@ textarea {
 }
 
 progress {
-  --_track-size: min(10000px, 1ex);
-  --_radius: 1e3px;
-
-  /*  reset  */
-  appearance: none;
   border: none;
 
   position: absolute;
-  height: var(--_track-size);
-  border-radius: var(--_radius);
+  height: 3vh;
+  width: 50vw;
+  border-radius: 1.5vh;
   overflow: hidden;
-
-  font-size: 4em;
 
   top:0;
   bottom: 0;
@@ -48,19 +42,9 @@ progress {
   margin: auto;
 }
 
-/* progress[max="100"][value="100"]::before {
-  content: "✓";
-  
-  position: absolute;
-  inset-block: 0;
-  inset-inline: auto 0;
-  display: flex;
-  align-items: center;
-  padding-inline-end: max(calc(var(--_track-size) / 4), 3px);
-
-  color: white;
-  font-size: calc(var(--_track-size) / 1.25);
-} */
+progress::-webkit-progress-value { 
+  background-color: #80d743;
+}
 
 #loading {
   width: 100vw;

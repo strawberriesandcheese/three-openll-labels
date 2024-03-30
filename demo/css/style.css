@@ -1,7 +1,6 @@
 :root {
   font-family: sans-serif;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 1em;
   font-weight: 400;
 
   color-scheme: dark;
@@ -16,7 +15,7 @@
 
 iframe {
   width: 100vw;
-  border: 0px;
+  border: none;
   flex-grow: 1;
 }
 
@@ -25,8 +24,6 @@ body {
 	background-color: #000;
 	color: #fff;
 	font-family: Monospace;
-	font-size: 13px;
-	line-height: 24px;
 	overscroll-behavior: none;
   height: 100vh;
 }
@@ -43,9 +40,9 @@ body {
 
 #info {
 	position: absolute;
-	top: 0px;
+	top: 0;
 	width: 100%;
-	padding: 10px;
+	padding: 0.5em;
 	box-sizing: border-box;
 	text-align: center;
 	-moz-user-select: none;
